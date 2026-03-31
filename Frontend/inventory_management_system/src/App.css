@@ -1,0 +1,43 @@
+.App {
+  min-height: 100vh;
+  background-color: var(--bg-dark);
+}
+
+.add_button {
+  text-align: right;
+  padding: 20px 0;
+}
+
+.tr_color {
+  color: white;
+  background-color: #dc2626;
+}
+
+button {
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+.container-custom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 30px;
+  letter-spacing: -0.5px;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}

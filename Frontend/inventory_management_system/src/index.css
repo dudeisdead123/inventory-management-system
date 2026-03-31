@@ -1,0 +1,341 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Light theme mapping for White/Black look */
+  --primary-color: #2563eb;
+  --primary-dark: #1e40af;
+  --primary-light: #60a5fa;
+  
+  --bg-dark: #f3f3f3;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: #e2e8f0;
+
+  --text-main: #000000;
+  --text-muted: #4b5563;
+  
+  --dark-900: #000000;
+  --dark-800: #1f2937;
+  --dark-700: #374151;
+  --gray-600: #4b5563;
+  --gray-500: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  --light-50: #f9fafb;
+  --white: #ffffff;
+
+  --success-color: #00e676;
+  --warning-color: #ffea00;
+  --danger-color: #ff1744;
+  --info-color: #2979ff;
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  
+  --shadow-neon: 0 0 10px rgba(0, 242, 254, 0.3), 0 0 20px rgba(0, 242, 254, 0.2);
+  --shadow-card: 0 10px 30px -10px rgba(0,0,0,0.5);
+  --transition-base: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Glassmorphism Cards */
+.card, .product-card, .login-card, .location-card, .movement-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition-base);
+  backdrop-filter: blur(10px);
+}
+
+.card:hover, .product-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(0, 242, 254, 0.3);
+  box-shadow: var(--shadow-neon);
+}
+
+/* Typography Enhancements */
+h1, h3, h4, h5 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+/* Buttons */
+button, .btn {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-300);
+  cursor: pointer;
+  transition: none !important;
+  background: #ffffff;
+  color: #000;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  box-shadow: none !important;
+}
+
+
+
+/* Inputs */
+input, select, textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-family: inherit;
+  transition: var(--transition-base);
+}
+
+option {
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.2);
+}
+
+/* Badges & Status */
+.status-badge, .stock-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.in-stock, .active { color: var(--success-color); background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.3); padding: 2px 10px; border-radius: 8px;}
+.low-stock, .warning { color: var(--warning-color); background: rgba(255, 234, 0, 0.1); border: 1px solid rgba(255, 234, 0, 0.3); padding: 2px 10px; border-radius: 8px;}
+.out-of-stock, .inactive { color: var(--danger-color); background: rgba(255, 23, 68, 0.1); border: 1px solid rgba(255, 23, 68, 0.3); padding: 2px 10px; border-radius: 8px;}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--bg-card-hover); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
+
+/* Global links */
+a { color: var(--primary-color); text-decoration: none; transition: var(--transition-base); }
+a:hover { color: var(--text-main); text-shadow: none !important; }
+
+/* Global overrides for unmapped legacy containers to prevent white backgrounds */
+.container-fluid, .container, .row, .col, .card-body, .card-header {
+  background-color: transparent !important;
+  color: var(--text-main) !important;
+}
+
+table {
+  color: var(--text-main) !important;
+}
+
+th, td, tr {
+  border-color: var(--glass-border) !important;
+  background-color: transparent !important;
+  color: var(--text-main) !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.text-dark {
+  color: var(--text-main) !important;
+}
+
+.bg-white, .bg-light {
+  background-color: transparent !important;
+}
+
+/* User requested no glowing or shape changing on any button or interactive element */
+* {
+  --shadow-neon: none; /* override the shadow variable globally */
+}
+
+button:hover, 
+.btn:hover, 
+a:hover, 
+.nav-link:hover,
+.location-card:hover,
+.movement-card:hover,
+.stat-card:hover,
+.card:hover,
+.product-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Home Page Feature Cards Override */
+.feature-card {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid var(--gray-200) !important;
+}
+
+.feature-card .card-body {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+.feature-card .home-action-btn {
+  margin-top: auto !important;
+  align-self: center !important;
+}
+
+.feature-card h5, 
+.feature-card p,
+.feature-card .card-title,
+.feature-card .card-text {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background: none !important;
+}
+
+/* Hero/Welcome Section Styling */
+.hero-section {
+  background: #f3f3f3 !important;
+  color: #000000 !important;
+  padding: 3rem;
+  margin-bottom: 2rem;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.hero-section h1, 
+.hero-section .display-4 {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background: none !important;
+  font-weight: 800 !important;
+}
+
+.hero-section p,
+.hero-section .lead {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background: none !important;
+}
+
+/* Home Action Buttons (matching Logout button) */
+.home-action-btn {
+  background: #f1c40f !important;
+  color: #000000 !important;
+  border: none !important;
+  padding: 12px 24px !important;
+  border-radius: 20px !important;
+  font-weight: 800 !important;
+  font-size: 1rem !important;
+  text-transform: capitalize !important;
+  font-family: inherit !important;
+  display: inline-block;
+  text-decoration: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: none !important;
+}
+
+.home-action-btn:hover {
+  background: #e1b40d !important; /* Slightly darker on hover */
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Global Overrides for User Styling Requests */
+.navbar-modern,
+.stock-dashboard .stat-card,
+.stock-dashboard .alerts-section,
+.stock-dashboard .movements-section,
+.stock-management .stock-header,
+.stock-management .stock-tabs,
+.stock-management .tab-content,
+.stock-management .stock-settings,
+.stock-management .location-card,
+.stock-management .movement-card,
+.card,
+.shadow,
+.shadow-sm,
+.shadow-lg,
+.logout-btn,
+.dashboard-header,
+.stock-header,
+.navbar {
+  box-shadow: none !important;
+  border-bottom: none !important;
+}
+
+/* Force-removing any box-shadow on all elements if the user is still seeing it */
+div[class*="dashboard"], div[class*="header"], div[class*="card"] {
+  box-shadow: none !important;
+}
+
+/* Dashboard Stat Icons and Numbers Styling */
+.stats-grid .stat-icon {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-text-stroke: 1px #000000 !important;
+  text-shadow: 
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    0 1px 0 #000,
+    0 -1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000 !important;
+  filter: none !important;
+}
+
+.stats-grid .stat-info h3 {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background: none !important;
+  font-weight: 800 !important;
+}
+
+.alerts-section h2, 
+.movements-section h2 {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background: none !important;
+  margin-top: 2rem !important; /* slightly moved up */
+  margin-left: 2rem !important;
+  margin-bottom: 2rem !important;
+  font-weight: 800 !important;
+}

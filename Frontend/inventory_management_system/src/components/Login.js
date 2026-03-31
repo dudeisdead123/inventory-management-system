@@ -118,21 +118,19 @@ const Login = () => {
                             />
                         </div>
                         
-                        {isLogin && (
-                            <div className="form-group">
-                                <label htmlFor="password">Password</label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="Enter your password"
-                                    minLength={5}
-                                />
-                            </div>
-                        )}
+                        <div className="form-group">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                placeholder={isLogin ? "Enter your password" : "Create a password"}
+                                minLength={5}
+                            />
+                        </div>
                         
                         <button type="submit" className="login-button" disabled={loading}>
                             {loading ? 'Loading...' : 'Continue'}

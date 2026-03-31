@@ -1,10 +1,8 @@
 .navbar-modern {
+  position: static;
   background: #ffffff !important;
   border-bottom: 1px solid var(--gray-200);
   padding: 0.7rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
   box-shadow: var(--shadow-sm);
 }
 

@@ -6,6 +6,7 @@ const CustomerDashboard = () => {
     const { user, socket } = useAuth();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [quantities, setQuantities] = useState({}); // { productId: quantity }
 
     useEffect(() => {
         fetchProducts();
@@ -65,7 +66,16 @@ const CustomerDashboard = () => {
         }
     };
 
+    const handleQuantityChange = (productId, delta, maxStock) => {
+        setQuantities(prev => {
+            const currentQty = prev[productId] || 1;
+            const newQty = Math.max(1, Math.min(maxStock, currentQty + delta));
+            return { ...prev, [productId]: newQty };
+        });
+    };
+
     const handleBuy = async (productId) => {
+        const qtyToBuy = quantities[productId] || 1;
         try {
             const token = localStorage.getItem('auth-token');
             const response = await fetch(`http://localhost:3001/buy/${productId}`, {
@@ -76,7 +86,7 @@ const CustomerDashboard = () => {
                 },
                 body: JSON.stringify({
                     location: user.location,
-                    quantity: 1 // Default to buying 1 for now
+                    quantity: qtyToBuy
                 })
             });
 
@@ -114,6 +124,7 @@ const CustomerDashboard = () => {
                         loc => loc.location.toLowerCase() === userCity
                     );
                     const localStock = localStockInfo ? localStockInfo.quantity : 0;
+                    const currentQty = quantities[product._id] || 1;
                     
                     return (
                         <div key={product._id} className="product-card">
@@ -125,11 +136,33 @@ const CustomerDashboard = () => {
                                     : <span className="out-of-stock">Out of Stock</span>
                                 }
                             </p>
+                            
+                            {localStock > 0 && (
+                                <div className="quantity-selector">
+                                    <button 
+                                        className="qty-btn"
+                                        onClick={() => handleQuantityChange(product._id, -1, localStock)}
+                                        disabled={currentQty <= 1}
+                                    >
+                                        -
+                                    </button>
+                                    <span className="qty-display">{currentQty}</span>
+                                    <button 
+                                        className="qty-btn"
+                                        onClick={() => handleQuantityChange(product._id, 1, localStock)}
+                                        disabled={currentQty >= localStock}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            )}
+
                             <button 
                                 className={`buy-button ${localStock === 0 ? 'disabled' : ''}`}
                                 onClick={() => handleBuy(product._id)}
+                                disabled={localStock === 0}
                             >
-                                Buy 1 Item
+                                {localStock === 0 ? 'Out of Stock' : `Buy ${currentQty} Item${currentQty > 1 ? 's' : ''}`}
                             </button>
                         </div>
                     );

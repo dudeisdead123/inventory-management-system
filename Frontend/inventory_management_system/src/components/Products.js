@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import './Products.css'
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 export default function Products() {
 
@@ -9,6 +12,7 @@ export default function Products() {
     }, [])
 
     const [productData, setProductData] = useState([]);
+    const [isExporting, setIsExporting] = useState(false);
 
     const getAuthHeaders = () => {
         const token = localStorage.getItem('auth-token');
@@ -39,6 +43,72 @@ export default function Products() {
             console.log(err);
         }
     }
+
+    const exportToPDF = () => {
+        setIsExporting(true);
+        try {
+            const doc = new jsPDF();
+            doc.setFontSize(20);
+            doc.setTextColor(40);
+            doc.text("IMS - Products Inventory Report", 14, 22);
+            doc.setFontSize(11);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+            const tableColumn = ["#", "Product Name", "Price", "Barcode", "Stock", "Status"];
+            const tableRows = [];
+
+            productData.forEach((p, index) => {
+                const rowData = [
+                    index + 1,
+                    p.ProductName,
+                    `INR ${p.ProductPrice}`,
+                    p.ProductBarcode,
+                    p.totalStock,
+                    p.totalStock === 0 ? "Out of Stock" : p.isLowStock ? "Low Stock" : "In Stock"
+                ];
+                tableRows.push(rowData);
+            });
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                theme: 'grid',
+                headStyles: { fillColor: [241, 196, 15], textColor: [0, 0, 0] }
+            });
+
+            doc.save("Inventory_Report.pdf");
+        } catch (err) {
+            console.error(err);
+            alert("Export failed");
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const exportToExcel = () => {
+        setIsExporting(true);
+        try {
+            const worksheetData = productData.map((p, index) => ({
+                "S.No": index + 1,
+                "Product Name": p.ProductName,
+                "Price": p.ProductPrice,
+                "Barcode": p.ProductBarcode,
+                "Stock": p.totalStock,
+                "Status": p.totalStock === 0 ? "Out of Stock" : p.isLowStock ? "Low Stock" : "In Stock"
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+            XLSX.writeFile(workbook, "Inventory_Data.xlsx");
+        } catch (err) {
+            console.error(err);
+            alert("Export failed");
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     const deleteProduct = async (id) => {
 
@@ -98,6 +168,22 @@ export default function Products() {
                 <div className="products-header">
                     <h1>Products Inventory</h1>
                     <div className="header-actions">
+                        <button 
+                            className="home-action-btn me-2" 
+                            onClick={exportToExcel}
+                            disabled={isExporting}
+                            style={{ background: '#10b981', padding: '10px 20px', fontSize: '0.9rem' }}
+                        >
+                            📊 Excel
+                        </button>
+                        <button 
+                            className="home-action-btn me-3" 
+                            onClick={exportToPDF}
+                            disabled={isExporting}
+                            style={{ background: '#ef4444', padding: '10px 20px', fontSize: '0.9rem' }}
+                        >
+                            📄 PDF
+                        </button>
                         <button 
                             onClick={initializeLocations} 
                             className='products-header-btn me-2'

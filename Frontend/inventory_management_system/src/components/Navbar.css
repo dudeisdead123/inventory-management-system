@@ -73,6 +73,15 @@
   border-radius: 30px; /* Fully rounded pill shape */
 }
 
+.nav-icon-arrow {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(1px);
+}
+
+.nav-link:hover .nav-icon-arrow {
+  transform: translateX(-5px) translateY(1px) scale(1.4);
+}
+
 
 
 .navbar-user {
@@ -99,6 +108,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-transform: capitalize;
+  transform: translateY(2px);
 }
 
 .logout-btn {

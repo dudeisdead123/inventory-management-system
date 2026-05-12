@@ -295,47 +295,75 @@
 
 /* Recent Movements */
 .movements-section {
-  background: var(--white);
-  padding: 3rem var(--spacing-lg) var(--spacing-lg) var(--spacing-lg); /* More padding at the top */
+  background: #fffffa;
+  padding: 8.5rem var(--spacing-lg) 1.5rem var(--spacing-lg) !important; /* Reduced bottom padding */
   border-radius: var(--radius-lg);
+  border: 3px solid #000000 !important;
+  border-bottom: 3px solid #000000 !important; /* Explicitly ensure bottom is black */
+  box-sizing: border-box !important;
   box-shadow: none !important;
+  margin-bottom: 2rem !important; /* Reduced bottom margin */
+  display: block !important;
+  position: relative !important;
 }
 
 .movements-section h2 {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
   background: none !important;
-  margin-top: 2.5rem !important; /* Move text lower within the box */
+  margin-top: 0 !important;
   margin-left: 0 !important;
-  margin-bottom: 2rem !important;
+  margin-bottom: 2.5rem !important;
   font-size: 1.5rem;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
+  display: inline-block; /* Changed to inline-block for precise underline width */
+  position: relative;
+  cursor: pointer;
+  left: 50%; /* Center the inline-block element */
+  transform: translateX(-50%);
+}
+
+.movements-section h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 100%;
+  height: 3px;
+  background-color: #d4b896;
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+
+.movements-section h2:hover::after {
+  transform: scaleX(1);
 }
 
 .movements-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem !important;
+  gap: 2rem !important;
   max-height: 400px;
   overflow-y: auto;
+  margin-bottom: 2rem !important; /* Spacing before the bottom border */
 }
 
 .movement-item {
   display: flex;
   align-items: flex-start;
   padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
+  border-radius: 0;
+  background: transparent;
+  border: none !important;
   transition: all var(--transition-base);
 }
 
 .movement-item:hover {
-  background: var(--gray-100);
-  box-shadow: var(--shadow-sm);
+  background: #faf8f5 !important;
+  border-radius: var(--radius-md);
+  box-shadow: none !important;
 }
 
 .movement-icon {
@@ -346,6 +374,9 @@
 
 .movement-details {
   flex: 1;
+  padding-left: 0 !important;
+  border-top: none !important;
+  padding-top: 0 !important;
 }
 
 .movement-header {
@@ -357,7 +388,8 @@
 
 .movement-header strong {
   color: var(--dark-900);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.25rem;
 }
 
 .movement-type {
@@ -455,9 +487,11 @@
     font-size: 1.5rem;
   }
 
-  .alerts-section,
+  .alerts-section {
+    padding: var(--spacing-lg) var(--spacing-lg) !important;
+  }
   .movements-section {
-    padding: var(--spacing-lg) var(--spacing-md);
+    padding: 8.5rem var(--spacing-lg) var(--spacing-lg) var(--spacing-lg) !important;
   }
 
   .alert-item {

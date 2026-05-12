@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import './StockDashboard.css';
 
 const StockDashboard = () => {
+    const { user } = useAuth();
     const [stats, setStats] = useState({
         totalProducts: 0,
         lowStockProducts: 0,
@@ -162,7 +164,7 @@ const StockDashboard = () => {
                             <div key={alert._id} className={`alert-item severity-${alert.severity}`}>
                                 <div className="alert-content">
                                     <div className="alert-header">
-                                        <span className={`alert-type alert-type-${alert.alertType.replace(/_/g, '-')}`}>{alert.alertType.replace('_', ' ').toUpperCase()}</span>
+                                        <span className={`alert-type alert-type-${alert.alertType.replace(/_/g, '-')}`}>{alert.alertType.replace(/_/g, ' ').toUpperCase()}</span>
                                     </div>
                                     <p className="alert-message">{alert.message}</p>
                                     <div className="alert-details">
@@ -186,29 +188,33 @@ const StockDashboard = () => {
             )}
 
             {/* Recent Movements */}
-            <div className="movements-section">
-                <h2>Recent Stock Movements</h2>
+            <div className="movements-section" style={{ 
+                boxShadow: '0 0 0 3px black', /* This creates a persistent 3px perimeter border */
+                borderRadius: '20px', 
+                padding: '8.5rem 2rem 2.5rem 2rem', 
+                marginBottom: '40px', 
+                overflow: 'visible',
+                display: 'block'
+            }}>
+                <h2 style={{ paddingTop: '60px', textAlign: 'center', marginBottom: '2.5rem' }}>Recent Stock Movements</h2>
                 <div className="movements-list">
                     {stats.recentMovements.map((movement, index) => (
-                        <div key={index} className="movement-item">
-                            <div className="movement-icon">
-                                {getMovementIcon(movement.movement.type)}
-                            </div>
-                            <div className="movement-details">
-                                <div className="movement-header">
-                                    <strong>{movement.ProductName}</strong>
-                                    <span className={`movement-type ${movement.movement.type}`}>
+                        <div key={index} className="movement-item" style={{ justifyContent: 'center' }}>
+                            <div className="movement-details" style={{ textAlign: 'center', padding: '0', color: '#1a1a1a' }}>
+                                <div className="movement-header" style={{ flexDirection: 'column', gap: '0.5rem', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                                    <strong style={{ fontSize: '1.25rem', color: '#000000', fontWeight: '800' }}>{movement.ProductName}</strong>
+                                    <span className={`movement-type ${movement.movement.type}`} style={{ display: 'inline-block' }}>
                                         {movement.movement.type.toUpperCase()}
                                     </span>
                                 </div>
-                                <div className="movement-info">
+                                <div className="movement-info" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center', justifyContent: 'center', color: '#1a1a1a', fontWeight: '600' }}>
                                     <span>Quantity: {movement.movement.quantity}</span>
                                     <span>Location: {movement.movement.location}</span>
                                     <span>By: {movement.user}</span>
-                                    <span>{new Date(movement.movement.date).toLocaleDateString()}</span>
+                                    <span style={{ opacity: 0.9 }}>{new Date(movement.movement.date).toLocaleDateString()}</span>
                                 </div>
                                 {movement.movement.reason && (
-                                    <p className="movement-reason">Reason: {movement.movement.reason}</p>
+                                    <p className="movement-reason" style={{ textAlign: 'center', marginTop: '0.5rem', color: '#000000', fontWeight: '600', fontStyle: 'italic' }}>Reason: {movement.movement.reason}</p>
                                 )}
                             </div>
                         </div>

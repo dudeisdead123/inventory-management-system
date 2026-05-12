@@ -374,7 +374,7 @@ const StockManagement = () => {
 
     const getStockLevelClass = (current, min) => {
         if (current === 0) return 'out-of-stock';
-        if (current <= min) return 'low-stock';
+        if (current < min) return 'low-stock';
         if (current <= min * 2) return 'medium-stock';
         return 'good-stock';
     };

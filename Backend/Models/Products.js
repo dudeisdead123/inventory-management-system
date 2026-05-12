@@ -51,7 +51,7 @@ const LocationStockSchema = new mongoose.Schema({
     },
     minStockLevel: {
         type: Number,
-        default: 0
+        default: 1
     },
     maxStockLevel: {
         type: Number,
@@ -137,8 +137,8 @@ ProductSchema.pre('save', function(next) {
     }, 0);
     
     // Check if any location has low stock or if global stock is low
-    this.isLowStock = this.totalStock <= this.globalMinStock || 
-        this.locationStock.some(location => location.quantity <= location.minStockLevel);
+    this.isLowStock = this.totalStock < this.globalMinStock || 
+        this.locationStock.some(location => location.quantity < location.minStockLevel);
     
     this.updatedAt = new Date();
     next();
@@ -263,7 +263,7 @@ ProductSchema.methods.calculateTotalStock = function() {
     }, 0);
     
     // Update low stock status
-    this.isLowStock = this.totalStock <= this.globalMinStock;
+    this.isLowStock = this.totalStock < this.globalMinStock;
     
     return this.totalStock;
 };

@@ -4,6 +4,7 @@ const products = require('../Models/Products');
 const User = require('../Models/User');
 const Location = require('../Models/Location');
 const StockAlert = require('../Models/StockAlert');
+const { configureTransporter, getEmailConfigStatus, sendLowStockEmail, sendTestEmail } = require('../services/emailService');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
@@ -110,7 +111,7 @@ router.post('/getuser', fetchuser, async (req, res) => {
 
 
 router.post("/insertproduct", fetchuser, async (req, res) => {
-    const { ProductName, ProductPrice, ProductBarcode } = req.body;
+    const { ProductName, ProductPrice, ProductBarcode, globalMinStock } = req.body;
 
     try {
        
@@ -130,15 +131,15 @@ router.post("/insertproduct", fetchuser, async (req, res) => {
                 ProductPrice, 
                 ProductBarcode,
                 totalStock: 0, 
-                globalMinStock: 10,
+                globalMinStock: globalMinStock || 10,
                 globalMaxStock: 1000,
                 locationStock: [
-                    { location: 'mumbai', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 0, maxStockLevel: 1000 },
-                    { location: 'delhi', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 0, maxStockLevel: 1000 },
-                    { location: 'bengaluru', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 0, maxStockLevel: 1000 },
-                    { location: 'chennai', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 0, maxStockLevel: 1000 },
-                    { location: 'kolkata', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 0, maxStockLevel: 1000 },
-                    { location: 'hyderabad', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 0, maxStockLevel: 1000 }
+                    { location: 'mumbai', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 1, maxStockLevel: 1000 },
+                    { location: 'delhi', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 1, maxStockLevel: 1000 },
+                    { location: 'bengaluru', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 1, maxStockLevel: 1000 },
+                    { location: 'chennai', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 1, maxStockLevel: 1000 },
+                    { location: 'kolkata', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 1, maxStockLevel: 1000 },
+                    { location: 'hyderabad', quantity: 0, reservedQuantity: 0, damagedQuantity: 0, minStockLevel: 1, maxStockLevel: 1000 }
                 ], 
                 createdBy: req.user.id 
             });
@@ -203,7 +204,7 @@ router.get('/products/:id', fetchuser, async (req, res) => {
         await getProduct.save();
         
         const totalStock = getProduct.totalStock || 0;
-        const isLowStock = totalStock <= getProduct.globalMinStock;
+        const isLowStock = totalStock < getProduct.globalMinStock;
         const isOutOfStock = totalStock === 0;
         
         const productWithStock = {
@@ -225,15 +226,27 @@ router.get('/products/:id', fetchuser, async (req, res) => {
 
 
 router.put('/updateproduct/:id', fetchuser, async (req, res) => {
-    const { ProductName, ProductPrice, ProductBarcode } = req.body;
+    const { ProductName, ProductPrice, ProductBarcode, globalMinStock } = req.body;
 
     try {
-        const updateProducts = await products.findByIdAndUpdate(req.params.id, { ProductName, ProductPrice, ProductBarcode }, { new: true });
-        console.log("Data Updated");
-        res.status(201).json(updateProducts);
+        const product = await products.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        if (ProductName) product.ProductName = ProductName;
+        if (ProductPrice) product.ProductPrice = ProductPrice;
+        if (ProductBarcode) product.ProductBarcode = ProductBarcode;
+        if (globalMinStock !== undefined) product.globalMinStock = Number(globalMinStock);
+
+        await product.save();
+        
+        console.log("Data Updated and Status Recalculated");
+        res.status(201).json(product);
     }
     catch (err) {
         console.log(err);
+        res.status(500).json({ error: 'Server error' });
     }
 })
 
@@ -641,6 +654,9 @@ router.post('/buy/:productId', fetchuser, async (req, res) => {
         product.removeStock(location, parseInt(quantity), req.user.id, 'Customer Purchase', 'Purchase');
         await product.save();
 
+        // Trigger alerts after customer purchase
+        await checkAndCreateStockAlerts(product);
+
         const io = req.app.get('socketio');
         if (io) {
             io.emit('stockUpdated', { productId, type: 'buy', newStockLevel: product.totalStock });
@@ -731,7 +747,7 @@ router.get('/alerts', fetchuser, async (req, res) => {
     try {
         const { unread, severity } = req.query;
         
-        let filter = {};
+        let filter = { userId: req.user.id };
         if (unread === 'true') filter.isRead = false;
         if (severity) filter.severity = severity;
 
@@ -797,8 +813,9 @@ router.get('/dashboard/stats', fetchuser, async (req, res) => {
         const locations = await Location.countDocuments({ isActive: true, createdBy: req.user.id });
         
         // Get recent stock movements for user's products only
+        const mongoose = require('mongoose');
         const recentMovements = await products.aggregate([
-            { $match: { createdBy: req.user.id } }, // Filter by user first
+            { $match: { createdBy: new mongoose.Types.ObjectId(req.user.id) } }, // Filter by user first using ObjectId
             { $unwind: '$stockMovements' },
             { $sort: { 'stockMovements.date': -1 } },
             { $limit: 10 },
@@ -839,14 +856,49 @@ router.get('/dashboard/stats', fetchuser, async (req, res) => {
 // Function to check and create stock alerts
 async function checkAndCreateStockAlerts(product) {
     try {
-        // Check each location for low stock
+        await product.calculateTotalStock();
+        
+        // 1. GLOBAL STOCK CHECK
+        if (product.totalStock < product.globalMinStock) {
+            const existingGlobalAlert = await StockAlert.findOne({
+                product: product._id,
+                alertType: product.totalStock === 0 ? 'out_of_stock' : 'low_stock',
+                location: 'Global',
+                isResolved: false
+            });
+
+            if (!existingGlobalAlert) {
+                const severity = product.totalStock === 0 ? 'critical' : 'high';
+                const message = `GLOBAL ALERT: ${product.ProductName} total stock is low (${product.totalStock}). Minimum required: ${product.globalMinStock}`;
+                
+                await StockAlert.create({
+                    userId: product.createdBy,
+                    product: product._id,
+                    alertType: product.totalStock === 0 ? 'out_of_stock' : 'low_stock',
+                    location: 'Global',
+                    currentQuantity: product.totalStock,
+                    threshold: product.globalMinStock,
+                    severity: severity,
+                    message: message
+                });
+
+                await sendLowStockEmail(product, 'Global Inventory', product.totalStock, product.globalMinStock, severity);
+            }
+        } else {
+            // AUTO-RESOLVE GLOBAL ALERT IF STOCK IS REFILLED
+            await StockAlert.updateMany(
+                { product: product._id, location: 'Global', isResolved: false },
+                { isResolved: true, isRead: true }
+            );
+        }
+
+        // 2. LOCATION-SPECIFIC CHECK
         for (const locationStock of product.locationStock) {
-            if (locationStock.quantity <= locationStock.minStockLevel) {
-                // Check if alert already exists for this product-location combination
+            // Trigger if below threshold OR if completely out of stock
+            if (locationStock.quantity < locationStock.minStockLevel || locationStock.quantity === 0) {
                 const existingAlert = await StockAlert.findOne({
                     product: product._id,
                     location: locationStock.location,
-                    alertType: locationStock.quantity === 0 ? 'out_of_stock' : 'low_stock',
                     isResolved: false
                 });
 
@@ -855,6 +907,7 @@ async function checkAndCreateStockAlerts(product) {
                                    locationStock.quantity <= (locationStock.minStockLevel / 2) ? 'high' : 'medium';
                     
                     await StockAlert.create({
+                        userId: product.createdBy,
                         product: product._id,
                         alertType: locationStock.quantity === 0 ? 'out_of_stock' : 'low_stock',
                         location: locationStock.location,
@@ -863,7 +916,15 @@ async function checkAndCreateStockAlerts(product) {
                         severity: severity,
                         message: `${product.ProductName} is ${locationStock.quantity === 0 ? 'out of stock' : 'running low'} at ${locationStock.location}. Current: ${locationStock.quantity}, Minimum: ${locationStock.minStockLevel}`
                     });
+
+                    await sendLowStockEmail(product, locationStock.location, locationStock.quantity, locationStock.minStockLevel, severity);
                 }
+            } else {
+                // AUTO-RESOLVE LOCATION ALERT IF STOCK IS REFILLED
+                await StockAlert.updateMany(
+                    { product: product._id, location: locationStock.location, isResolved: false },
+                    { isResolved: true, isRead: true }
+                );
             }
         }
     } catch (error) {
@@ -962,6 +1023,151 @@ router.put('/products/:productId/stock-limits', fetchuser, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// ====== ANALYTICS ROUTES ======
+
+router.get('/analytics/data', fetchuser, async (req, res) => {
+    try {
+        const mongoose = require('mongoose');
+        const userId = new mongoose.Types.ObjectId(req.user.id);
+
+        // 1. Category-wise distribution
+        const categoryData = await products.aggregate([
+            { $match: { isActive: true, createdBy: userId } },
+            { $group: { _id: '$ProductCategory', count: { $sum: 1 }, totalStock: { $sum: '$totalStock' } } },
+            { $sort: { count: -1 } }
+        ]);
+
+        // 2. Location-wise stock
+        const allProducts = await products.find({ isActive: true, createdBy: userId });
+        const locationMap = {};
+        allProducts.forEach(p => {
+            p.locationStock.forEach(loc => {
+                if (!locationMap[loc.location]) locationMap[loc.location] = 0;
+                locationMap[loc.location] += loc.quantity;
+            });
+        });
+        const locationData = Object.entries(locationMap).map(([name, stock]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), stock }));
+
+        // 3. Stock movements over last 7 days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const movementsByDay = await products.aggregate([
+            { $match: { createdBy: userId } },
+            { $unwind: '$stockMovements' },
+            { $match: { 'stockMovements.date': { $gte: sevenDaysAgo } } },
+            {
+                $group: {
+                    _id: {
+                        date: { $dateToString: { format: '%Y-%m-%d', date: '$stockMovements.date' } },
+                        type: '$stockMovements.type'
+                    },
+                    count: { $sum: 1 },
+                    totalQty: { $sum: '$stockMovements.quantity' }
+                }
+            },
+            { $sort: { '_id.date': 1 } }
+        ]);
+
+        // Build daily data for 7 days
+        const dailyData = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            
+            const dayMovements = movementsByDay.filter(m => m._id.date === dateStr);
+            const inbound = dayMovements.find(m => m._id.type === 'inbound');
+            const outbound = dayMovements.find(m => m._id.type === 'outbound');
+            
+            dailyData.push({
+                date: dayLabel,
+                inbound: inbound ? inbound.totalQty : 0,
+                outbound: outbound ? outbound.totalQty : 0
+            });
+        }
+
+        // 4. Movement type breakdown
+        const movementTypes = await products.aggregate([
+            { $match: { createdBy: userId } },
+            { $unwind: '$stockMovements' },
+            { $group: { _id: '$stockMovements.type', count: { $sum: 1 }, totalQty: { $sum: '$stockMovements.quantity' } } },
+            { $sort: { count: -1 } }
+        ]);
+        const movementTypeData = movementTypes.map(m => ({ name: m._id.charAt(0).toUpperCase() + m._id.slice(1), value: m.count, qty: m.totalQty }));
+
+        // 5. Top 5 products by stock value
+        const topProducts = await products.find({ isActive: true, createdBy: userId })
+            .sort({ totalStock: -1 })
+            .limit(5)
+            .select('ProductName totalStock ProductPrice');
+        const topProductData = topProducts.map(p => ({
+            name: p.ProductName.length > 15 ? p.ProductName.substring(0, 15) + '...' : p.ProductName,
+            fullName: p.ProductName,
+            stock: p.totalStock,
+            value: p.totalStock * p.ProductPrice
+        }));
+
+        // 6. Stock health summary
+        const totalCount = await products.countDocuments({ isActive: true, createdBy: userId });
+        const lowCount = await products.countDocuments({ isLowStock: true, isActive: true, totalStock: { $gt: 0 }, createdBy: userId });
+        const outCount = await products.countDocuments({ totalStock: 0, isActive: true, createdBy: userId });
+        const healthyCount = totalCount - lowCount - outCount;
+
+        res.status(200).json({
+            categoryData: categoryData.map(c => ({ name: c._id || 'Uncategorized', products: c.count, stock: c.totalStock })),
+            locationData,
+            dailyMovements: dailyData,
+            movementTypeData,
+            topProducts: topProductData,
+            stockHealth: {
+                healthy: healthyCount,
+                low: lowCount,
+                out: outCount,
+                total: totalCount
+            }
+        });
+    } catch (error) {
+        console.error('Analytics error:', error);
+        res.status(500).json({ error: 'Failed to fetch analytics data' });
+    }
+});
+
+// ====== EMAIL SETTINGS ROUTES ======
+
+router.post('/email-settings', fetchuser, async (req, res) => {
+    try {
+        const { adminEmail, appPassword } = req.body;
+        if (!adminEmail || !appPassword) {
+            return res.status(400).json({ error: 'Email and app password are required' });
+        }
+
+        configureTransporter(adminEmail, appPassword);
+        res.status(200).json({ message: 'Email configured successfully', status: getEmailConfigStatus() });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to configure email' });
+    }
+});
+
+router.get('/email-settings', fetchuser, async (req, res) => {
+    try {
+        res.status(200).json(getEmailConfigStatus());
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to get email settings' });
+    }
+});
+
+router.post('/email-settings/test', fetchuser, async (req, res) => {
+    try {
+        const result = await sendTestEmail();
+        res.status(200).json({ message: 'Test email sent successfully', ...result });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 

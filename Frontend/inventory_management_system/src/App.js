@@ -8,6 +8,7 @@ import StockDashboard from './components/StockDashboard';
 import StockManagement from './components/StockManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import CustomerDashboard from './components/CustomerDashboard';
+import Analytics from './components/Analytics';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 import {
@@ -38,6 +39,7 @@ const AppContent = () => {
                 <Route path="/updateproduct/:id" element={<UpdateProduct />} />
                 <Route path="/stock-dashboard" element={<StockDashboard />} />
                 <Route path="/stock-management/:productId" element={<StockManagement />} />
+                <Route path="/analytics" element={<Analytics />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </>
             )}

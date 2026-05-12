@@ -6,6 +6,7 @@ export default function InsertProduct() {
     const [productName, setProductName] = useState("");
     const [productPrice, setProductPrice] = useState("");
     const [productBarcode, setProductBarcode] = useState("");
+    const [globalMinStock, setGlobalMinStock] = useState(10);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate("");
@@ -42,7 +43,12 @@ export default function InsertProduct() {
                     "Content-Type": "application/json",
                     "auth-token": token
                 },
-                body: JSON.stringify({ "ProductName": productName, "ProductPrice": productPrice, "ProductBarcode": productBarcode })
+                body: JSON.stringify({ 
+                    "ProductName": productName, 
+                    "ProductPrice": productPrice, 
+                    "ProductBarcode": productBarcode,
+                    "globalMinStock": globalMinStock
+                })
             });
 
             await res.json();
@@ -137,6 +143,23 @@ export default function InsertProduct() {
                                 required 
                             />
                             <p className='helper-text'>Max 12 digits. Must be unique.</p>
+                        </div>
+
+                        <div className="form-field-group">
+                            <label htmlFor="global_min_stock" className="field-label">
+                                Global Minimum Stock Alert
+                                <span className="required-star">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                onChange={(e) => setGlobalMinStock(e.target.value)} 
+                                value={globalMinStock} 
+                                className="field-input" 
+                                id="global_min_stock" 
+                                placeholder="e.g., 10" 
+                                required 
+                            />
+                            <p className='helper-text'>Receive an alert when total stock falls below this level.</p>
                         </div>
 
                         {/* Button Group */}

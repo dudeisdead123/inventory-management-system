@@ -38,6 +38,7 @@
 }
 
 .product-card {
+  background-color: #fffffa !important;
   padding: 2.5rem 2rem;
   display: flex;
   flex-direction: column;
@@ -57,14 +58,20 @@
 }
 
 .product-card h3 {
-  margin: 0;
-  font-size: 2rem;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: var(--text-main);
-  background: none;
-  -webkit-background-clip: unset;
-  background-clip: unset;
-  -webkit-text-fill-color: unset;
+  color: #ffffff !important;
+  background: #000000 !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #ffffff !important;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  display: inline-block;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .price {

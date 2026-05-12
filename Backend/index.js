@@ -7,6 +7,7 @@ const port = 3001
 
 const cors = require('cors')
 const router = require('./Routes/router')
+const { initEmailService } = require('./services/emailService');
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -39,7 +40,6 @@ io.on('connection', (socket) => {
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
+  // Initialize email service after database connection is established
+  initEmailService();
 })
-
-
-

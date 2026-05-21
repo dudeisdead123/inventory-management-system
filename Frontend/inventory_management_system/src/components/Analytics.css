@@ -1106,24 +1106,130 @@
     letter-spacing: 0.05em;
 }
 
-.forecast-chart-btn {
+.forecast-chart-cell {
+    text-align: center;
+    width: 56px;
+}
+
+.analytics-page .forecast-chart-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0 !important;
+    margin: 0;
+    border-radius: 10px;
+    border: 1px solid rgba(123, 108, 220, 0.28);
+    background: linear-gradient(160deg, rgba(123, 108, 220, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+    color: #b4a8e8;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition:
+        transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
+        border-color 0.22s ease,
+        background 0.22s ease,
+        color 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.analytics-page .forecast-chart-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.14), transparent 58%);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    pointer-events: none;
+}
+
+.analytics-page .forecast-chart-btn-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--glass-border);
-    background: rgba(255,255,255,0.03);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
-.forecast-chart-btn:hover {
-    background: rgba(99,102,241,0.12);
-    border-color: rgba(99,102,241,0.3);
-    color: #818cf8;
+.analytics-page .forecast-chart-btn:hover {
+    border-color: rgba(139, 124, 232, 0.55);
+    background: linear-gradient(160deg, rgba(123, 108, 220, 0.28) 0%, rgba(255, 255, 255, 0.06) 100%);
+    color: #e8e2ff;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 4px 14px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1px);
+}
+
+.analytics-page .forecast-chart-btn:hover::after {
+    opacity: 1;
+}
+
+.analytics-page .forecast-chart-btn:hover .forecast-chart-btn-icon {
+    transform: scale(1.08);
+}
+
+.analytics-page .forecast-chart-btn:active {
+    transform: translateY(0) scale(0.9);
+    transition-duration: 0.1s;
+}
+
+.analytics-page .forecast-chart-btn.is-active {
+    border-color: rgba(155, 140, 245, 0.75);
+    background: linear-gradient(160deg, rgba(123, 108, 220, 0.45) 0%, rgba(88, 76, 168, 0.35) 100%);
+    color: #ffffff;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 0 0 3px rgba(123, 108, 220, 0.22),
+        0 6px 16px rgba(0, 0, 0, 0.28);
+}
+
+.analytics-page .forecast-chart-btn.is-pulse {
+    animation: forecast-chart-btn-pop 0.38s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+.analytics-page .forecast-chart-btn.is-active .forecast-chart-btn-icon {
+    transform: scale(1.05);
+}
+
+.analytics-page .forecast-chart-btn:focus-visible {
+    outline: none;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 0 3px rgba(123, 108, 220, 0.35);
+}
+
+@keyframes forecast-chart-btn-pop {
+    0% {
+        transform: scale(0.82);
+    }
+    55% {
+        transform: scale(1.06);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.light-theme .analytics-page .forecast-chart-btn {
+    border-color: rgba(99, 88, 180, 0.35);
+    background: linear-gradient(160deg, rgba(99, 88, 180, 0.12) 0%, rgba(255, 255, 255, 0.9) 100%);
+    color: #5b4f9a;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.light-theme .analytics-page .forecast-chart-btn:hover {
+    color: #3d3568;
+    border-color: rgba(99, 88, 180, 0.55);
+    background: linear-gradient(160deg, rgba(99, 88, 180, 0.2) 0%, #ffffff 100%);
+}
+
+.light-theme .analytics-page .forecast-chart-btn.is-active {
+    color: #ffffff;
+    background: linear-gradient(160deg, #7b6ce0 0%, #5a4db8 100%);
+    border-color: #6a5bc9;
 }
 
 .forecast-table-footer {

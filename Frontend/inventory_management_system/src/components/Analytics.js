@@ -656,6 +656,14 @@ const ForecastSection = ({
     forecastData, forecastLoading, forecastSearch, setForecastSearch,
     forecastSort, setForecastSort, forecastChartProduct, setForecastChartProduct, onRefresh
 }) => {
+    const [chartBtnPulseId, setChartBtnPulseId] = useState(null);
+
+    const handleChartSelect = (row) => {
+        setForecastChartProduct(row);
+        setChartBtnPulseId(row.productId);
+        window.setTimeout(() => setChartBtnPulseId(null), 420);
+    };
+
     // Build 30-day projected decay points for selected product
     const decayPoints = useMemo(() => {
         if (!forecastChartProduct) return [];
@@ -894,13 +902,18 @@ const ForecastSection = ({
                                                         {meta.label}
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td className="forecast-chart-cell">
                                                     <button
-                                                        className="forecast-chart-btn"
-                                                        onClick={() => setForecastChartProduct(row)}
+                                                        type="button"
+                                                        className={`forecast-chart-btn${isSelected ? ' is-active' : ''}${chartBtnPulseId === row.productId ? ' is-pulse' : ''}`}
+                                                        onClick={() => handleChartSelect(row)}
+                                                        aria-label={`View stock decay chart for ${row.productName}`}
+                                                        aria-pressed={isSelected}
                                                         title="View decay chart"
                                                     >
-                                                        <Icons.Trend size={13}/>
+                                                        <span className="forecast-chart-btn-icon" aria-hidden="true">
+                                                            <Icons.FeatureChart size={15} strokeWidth={2} />
+                                                        </span>
                                                     </button>
                                                 </td>
                                             </tr>

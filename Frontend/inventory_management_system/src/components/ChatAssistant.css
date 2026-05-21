@@ -20,8 +20,8 @@
   --desk-assistant-bg: #1a1a1a;
   --desk-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
   --desk-backdrop: rgba(0, 0, 0, 0.55);
-  --desk-focus-border: #b87ec8;
-  --desk-focus-ring: rgba(196, 120, 210, 0.35);
+  --desk-focus-gradient: linear-gradient(90deg, #c9b8e8 0%, #8a9fd4 100%);
+  --desk-focus-glow: rgba(155, 140, 215, 0.38);
   --desk-error-bg: rgba(239, 68, 68, 0.1);
   --desk-error-text: #fca5a5;
 
@@ -57,8 +57,8 @@
   --desk-assistant-bg: #ffffff;
   --desk-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   --desk-backdrop: rgba(15, 15, 15, 0.35);
-  --desk-focus-border: #a86ab8;
-  --desk-focus-ring: rgba(168, 90, 185, 0.3);
+  --desk-focus-gradient: linear-gradient(90deg, #b8a5e0 0%, #7d92d4 100%);
+  --desk-focus-glow: rgba(140, 125, 200, 0.32);
   --desk-error-bg: rgba(239, 68, 68, 0.08);
   --desk-error-text: #b91c1c;
 }
@@ -556,8 +556,11 @@
 }
 
 .ims-desk-compose-box:focus-within {
-  border-color: var(--desk-focus-border) !important;
-  box-shadow: 0 0 0 3px var(--desk-focus-ring);
+  border: 1px solid transparent !important;
+  background:
+    linear-gradient(var(--desk-input), var(--desk-input)) padding-box,
+    var(--desk-focus-gradient) border-box !important;
+  box-shadow: 0 0 0 1.5px var(--desk-focus-glow);
 }
 
 .ims-desk-input {

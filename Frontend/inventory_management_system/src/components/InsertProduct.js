@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useToast } from '../contexts/ToastContext';
 import './InsertProduct.css';
+import { apiUrl } from '../config/api';
 
 export default function InsertProduct() {
     const [productName, setProductName] = useState("");
@@ -10,6 +12,8 @@ export default function InsertProduct() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate("");
+
+    const { showToast } = useToast();
 
     const setName = (e) => {
         setProductName(e.target.value);
@@ -29,6 +33,7 @@ export default function InsertProduct() {
 
         if (!productName || !productPrice || !productBarcode) {
             setError("*Please fill in all the required fields.");
+            showToast("Please fill in all the required fields.", "warning");
             return;
         }
 
@@ -37,7 +42,7 @@ export default function InsertProduct() {
 
         try {
             const token = localStorage.getItem('auth-token');
-            const res = await fetch("http://localhost:3001/insertproduct", {
+            const res = await fetch(apiUrl('/insertproduct'), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -54,19 +59,21 @@ export default function InsertProduct() {
             await res.json();
 
             if (res.status === 201) {
-                alert("Data Inserted Successfully!");
+                showToast("Product inserted successfully!", "success");
                 setProductName("");
                 setProductPrice("");
                 setProductBarcode("");
                 navigate('/products');
             }
             else if (res.status === 422) {
-                alert("Product is already added with that barcode.");
+                showToast("Product with this barcode already exists.", "error");
             }
             else {
+                showToast("Something went wrong. Please try again.", "error");
                 setError("Something went wrong. Please try again.");
             }
         } catch (err) {
+            showToast("An error occurred. Please try again later.", "error");
             setError("An error occurred. Please try again later.");
             console.log(err);
         } finally {

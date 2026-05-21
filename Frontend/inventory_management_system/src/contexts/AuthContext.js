@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import { API_BASE_URL, apiUrl } from '../config/api';
 
 const AuthContext = createContext();
 
@@ -27,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     
     useEffect(() => {
         if (user && !socket) {
-            const newSocket = io('http://localhost:3001');
+            const newSocket = io(API_BASE_URL);
             setSocket(newSocket);
         } else if (!user && socket) {
             socket.disconnect();
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUser = async (token) => {
         try {
-            const response = await fetch('http://localhost:3001/getuser', {
+            const response = await fetch(apiUrl('/getuser'), {
                 method: 'POST',
                 headers: {
                     'auth-token': token,
@@ -61,7 +62,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await fetch('http://localhost:3001/login', {
+            const response = await fetch(apiUrl('/login'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (name, email, password, role, location) => {
         try {
-            const response = await fetch('http://localhost:3001/createuser', {
+            const response = await fetch(apiUrl('/createuser'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

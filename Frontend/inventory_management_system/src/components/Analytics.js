@@ -1,91 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    LineChart, Line, PieChart, Pie, Cell, Legend
+    LineChart, Line, PieChart, Pie, Cell, Legend, AreaChart, Area, ReferenceLine
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
 import './Analytics.css';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-
-// Professional SVG Icons
-const Icons = {
-    Location: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-        </svg>
-    ),
-    Trend: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-            <polyline points="17 6 23 6 23 12"></polyline>
-        </svg>
-    ),
-    Category: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
-            <path d="M5 3v4"></path>
-            <path d="M19 17v4"></path>
-            <path d="M3 5h4"></path>
-            <path d="M17 19h4"></path>
-        </svg>
-    ),
-    Trophy: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-            <path d="M4 22h16"></path>
-            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-        </svg>
-    ),
-    Health: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-        </svg>
-    ),
-    PDF: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="8" y1="13" x2="16" y2="13"></line>
-            <line x1="8" y1="17" x2="16" y2="17"></line>
-        </svg>
-    ),
-    Excel: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-            <rect x="8" y="11" width="8" height="8" rx="1"></rect>
-            <line x1="8" y1="15" x2="16" y2="15"></line>
-            <line x1="12" y1="11" x2="12" y2="19"></line>
-        </svg>
-    ),
-    Alert: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-    )
+import { Icons } from './Icons';
+import { apiUrl } from '../config/api';
+// Theme‑aware vibrant gradient palette
+const THEME_COLORS = {
+  dark: [
+    '#94a3b8', // Muted Slate
+    '#818cf8', // Soft Indigo
+    '#38bdf8', // Soft Sky
+    '#2dd4bf', // Soft Teal
+    '#a78bfa', // Soft Violet
+    '#fbbf24', // Soft Amber (for contrast)
+    '#f472b6', // Soft Pink
+  ],
+  light: [
+    '#64748b', // Professional Slate
+    '#4f46e5', // Professional Indigo
+    '#0284c7', // Professional Sky
+    '#0d9488', // Professional Teal
+    '#7c3aed', // Professional Violet
+    '#d97706', // Professional Amber
+    '#db2777', // Professional Pink
+  ],
+  barDark: [
+    '#3b82f6', // Bright Blue
+    '#8b5cf6', // Vivid Purple
+    '#f43f5e', // Rose/Pink
+    '#f59e0b', // Amber/Orange
+    '#10b981', // Emerald Green
+  ],
+  barLight: [
+    '#1d4ed8', // Deep Blue
+    '#6d28d9', // Deep Purple
+    '#be123c', // Deep Rose
+    '#b45309', // Deep Amber
+    '#047857', // Deep Emerald
+  ]
 };
-
-// Light theme color palette
-const COLORS = ['#f1c40f', '#2979ff', '#00e676', '#7c4dff', '#ff9100', '#00bcd4', '#ff1744'];
-
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
             <div style={{
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: '8px',
                 padding: '12px 16px',
+                backdropFilter: 'blur(8px)',
                 boxShadow: '0 8px 30px rgba(0,0,0,0.1)'
             }}>
-                {label && <p style={{ color: '#1f2937', fontWeight: 800, fontSize: '0.85rem', margin: '0 0 6px 0' }}>{label}</p>}
+                {label && <p style={{ color: 'var(--text-main)', fontWeight: 800, fontSize: '0.85rem', margin: '0 0 6px 0' }}>{label}</p>}
                 {payload.map((entry, i) => (
                     <p key={i} style={{ color: entry.color, fontSize: '0.82rem', margin: '2px 0', fontWeight: 600 }}>
                         {entry.name}: <strong>{typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}</strong>
@@ -111,14 +82,43 @@ const Analytics = () => {
     const [error, setError] = useState('');
     const [isExporting, setIsExporting] = useState(false);
 
+    // Email Settings State
+    const [emailSettings, setEmailSettings] = useState({
+        adminEmail: '',
+        appPassword: '',
+        configured: false,
+        currentEmail: ''
+    });
+    const [settingsLoading, setSettingsLoading] = useState(false);
+    const [testEmailSending, setTestEmailSending] = useState(false);
+    const [feedbackMessage, setFeedbackMessage] = useState({ text: '', type: '' });
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Stock Forecasting State
+    const [forecastData, setForecastData] = useState([]);
+    const [forecastLoading, setForecastLoading] = useState(true);
+    const [forecastSearch, setForecastSearch] = useState('');
+    const [forecastSort, setForecastSort] = useState({ key: 'daysRemaining', dir: 'asc' });
+    const [forecastChartProduct, setForecastChartProduct] = useState(null);
+
     useEffect(() => {
         fetchAnalytics();
+        fetchEmailSettings();
+        fetchForecast();
     }, []);
+
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('auth-token');
+        return {
+            'Content-Type': 'application/json',
+            'auth-token': token
+        };
+    };
 
     const fetchAnalytics = async () => {
         try {
             const token = localStorage.getItem('auth-token');
-            const res = await fetch('http://localhost:3001/analytics/data', {
+            const res = await fetch(apiUrl('/analytics/data'), {
                 headers: { 'auth-token': token, 'Content-Type': 'application/json' }
             });
             if (!res.ok) throw new Error('Failed to fetch');
@@ -131,9 +131,109 @@ const Analytics = () => {
         }
     };
 
+    const fetchForecast = async () => {
+        setForecastLoading(true);
+        try {
+            const token = localStorage.getItem('auth-token');
+            const res = await fetch(apiUrl('/analytics/forecast'), {
+                headers: { 'auth-token': token, 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error('Failed to fetch forecast');
+            const json = await res.json();
+            setForecastData(json);
+            if (json.length > 0) setForecastChartProduct(json[0]);
+        } catch (err) {
+            console.error('Forecast fetch error:', err);
+        } finally {
+            setForecastLoading(false);
+        }
+    };
+
+    const fetchEmailSettings = async () => {
+        try {
+            const res = await fetch(apiUrl('/email-settings'), {
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                const config = await res.json();
+                setEmailSettings(prev => ({
+                    ...prev,
+                    configured: config.isConfigured || false,
+                    currentEmail: config.adminEmail || ''
+                }));
+            }
+        } catch (error) {
+            console.error('Error loading email settings:', error);
+        }
+    };
+
+    const handleSaveEmailSettings = async (e) => {
+        e.preventDefault();
+        setFeedbackMessage({ text: '', type: '' });
+
+        if (!emailSettings.adminEmail || !emailSettings.appPassword) {
+            setFeedbackMessage({ text: 'Email and App Password are required.', type: 'error' });
+            return;
+        }
+
+        setSettingsLoading(true);
+        try {
+            const res = await fetch(apiUrl('/email-settings'), {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    adminEmail: emailSettings.adminEmail,
+                    appPassword: emailSettings.appPassword
+                })
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                setFeedbackMessage({ text: 'SMTP Email Settings saved and configured!', type: 'success' });
+                setEmailSettings(prev => ({
+                    ...prev,
+                    configured: result.status?.isConfigured || true,
+                    currentEmail: emailSettings.adminEmail,
+                    adminEmail: '',
+                    appPassword: ''
+                }));
+            } else {
+                setFeedbackMessage({ text: 'Failed to configure email settings.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error saving email settings:', error);
+            setFeedbackMessage({ text: 'Error connecting to email service endpoint.', type: 'error' });
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const handleSendTestEmail = async () => {
+        setTestEmailSending(true);
+        setFeedbackMessage({ text: '', type: '' });
+        try {
+            const res = await fetch(apiUrl('/email-settings/test'), {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+
+            if (res.ok) {
+                setFeedbackMessage({ text: 'Test alert email sent successfully! Check your inbox.', type: 'success' });
+            } else {
+                const errData = await res.json();
+                setFeedbackMessage({ text: `Failed: ${errData.error || 'Check details'}`, type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error sending test email:', error);
+            setFeedbackMessage({ text: 'Could not trigger test alert email.', type: 'error' });
+        } finally {
+            setTestEmailSending(false);
+        }
+    };
+
     const fetchAllProductsForExport = async () => {
         const token = localStorage.getItem('auth-token');
-        const res = await fetch('http://localhost:3001/products', {
+        const res = await fetch(apiUrl('/products'), {
             headers: { 'auth-token': token }
         });
         if (!res.ok) throw new Error('Failed to fetch products');
@@ -147,7 +247,7 @@ const Analytics = () => {
             const doc = new jsPDF();
             
             doc.setFontSize(22);
-            doc.setTextColor(241, 196, 15); // IMS Yellow
+            doc.setTextColor(99, 102, 241); 
             doc.text('Inventory Management System', 14, 22);
             
             doc.setFontSize(11);
@@ -176,19 +276,19 @@ const Analytics = () => {
                 tableRows.push(rowData);
             });
 
-            doc.autoTable({
+            autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
                 startY: 55,
                 theme: 'striped',
-                headStyles: { fillColor: [241, 196, 15], textColor: [0, 0, 0], fontStyle: 'bold' },
+                headStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold' },
                 alternateRowStyles: { fillColor: [250, 250, 250] },
             });
 
             doc.save(`IMS_Inventory_Report_${new Date().toISOString().split('T')[0]}.pdf`);
         } catch (err) {
             console.error('PDF Export failed:', err);
-            alert('Failed to generate PDF report.');
+            console.error('PDF Export failed:', err);
         } finally {
             setIsExporting(false);
         }
@@ -219,7 +319,7 @@ const Analytics = () => {
             XLSX.writeFile(workbook, `IMS_Inventory_Sheet_${new Date().toISOString().split('T')[0]}.xlsx`);
         } catch (err) {
             console.error('Excel Export failed:', err);
-            alert('Failed to generate Excel report.');
+            console.error('Excel Export failed:', err);
         } finally {
             setIsExporting(false);
         }
@@ -257,7 +357,7 @@ const Analytics = () => {
                 <div className="analytics-header">
                     <div className="header-text">
                         <h1>Analytics Dashboard</h1>
-                        <p>System insights and reports — {new Date().toLocaleDateString()}</p>
+                        <p>System insights, reports, and SMTP alerts configuration</p>
                     </div>
                     <div className="header-export-actions">
                         <button className="export-btn pdf" onClick={exportToPDF} disabled={isExporting}>
@@ -272,7 +372,7 @@ const Analytics = () => {
                 </div>
 
                 <div className="charts-grid">
-
+                    {/* Stock by Location */}
                     <div className="chart-card">
                         <div className="chart-card-header">
                             <div className="chart-icon location"><Icons.Location /></div>
@@ -282,13 +382,16 @@ const Analytics = () => {
                             {locationData && locationData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={locationData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                                        <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
-                                        <YAxis tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.06)" vertical={false} />
+                                        <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }} />
+                                        <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }} />
                                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                                        <Bar dataKey="stock" name="Stock" fill="#f1c40f" radius={[8, 8, 0, 0]}>
+                                        <Bar dataKey="stock" name="Stock" fill="var(--text-main)" radius={[4, 4, 0, 0]}>
                                             {locationData.map((_, i) => (
-                                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                                                <Cell 
+                                                    key={i} 
+                                                    fill={document.body.classList.contains('light-theme') ? THEME_COLORS.barLight[i % THEME_COLORS.barLight.length] : THEME_COLORS.barDark[i % THEME_COLORS.barDark.length]} 
+                                                />
                                             ))}
                                         </Bar>
                                     </BarChart>
@@ -297,6 +400,7 @@ const Analytics = () => {
                         </div>
                     </div>
 
+                    {/* 7-Day Movements */}
                     <div className="chart-card">
                         <div className="chart-card-header">
                             <div className="chart-icon trend"><Icons.Trend /></div>
@@ -306,25 +410,26 @@ const Analytics = () => {
                             {dailyMovements && dailyMovements.some(d => d.inbound > 0 || d.outbound > 0) ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={dailyMovements} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                                        <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
-                                        <YAxis tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.06)" vertical={false} />
+                                        <XAxis dataKey="date" tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }} />
+                                        <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }} />
                                         <Tooltip content={<CustomTooltip />} />
-                                        <Legend iconType="circle" />
-                                        <Line type="monotone" dataKey="inbound" name="Inbound" stroke="#00e676" strokeWidth={3} dot={{ r: 5, fill: '#00e676' }} activeDot={{ r: 7 }} />
-                                        <Line type="monotone" dataKey="outbound" name="Outbound" stroke="#ff1744" strokeWidth={3} dot={{ r: 5, fill: '#ff1744' }} activeDot={{ r: 7 }} />
+                                        <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', fontFamily: 'Inter' }} />
+                                        <Line type="monotone" dataKey="inbound" name="Inbound" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981' }} activeDot={{ r: 5 }} />
+                                        <Line type="monotone" dataKey="outbound" name="Outbound" stroke="#f43f5e" strokeWidth={2} dot={{ r: 3, fill: '#f43f5e' }} activeDot={{ r: 5 }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             ) : <NoData />}
                         </div>
                     </div>
 
+                    {/* Category Distribution */}
                     <div className="chart-card">
                         <div className="chart-card-header">
                             <div className="chart-icon category"><Icons.Category /></div>
                             <h3>Category Distribution</h3>
                         </div>
-                        <div className="chart-container">
+                        <div className="chart-container relative-container">
                             {categoryData && categoryData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
@@ -332,23 +437,40 @@ const Analytics = () => {
                                             data={categoryData}
                                             cx="50%"
                                             cy="50%"
-                                            outerRadius={100}
-                                            innerRadius={60}
+                                            outerRadius={95}
+                                            innerRadius={65}
                                             dataKey="products"
                                             nameKey="name"
+                                            paddingAngle={4}
                                             label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            labelLine={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1.5 }}
+                                            style={{ outline: 'none', fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, fill: 'var(--text-main)' }}
+                                            className="pie-chart-pie"
                                         >
-                                            {categoryData.map((_, i) => (
-                                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                                            {categoryData.map((entry, i) => (
+                                                <Cell 
+                                                    key={i} 
+                                                    fill={document.body.classList.contains('light-theme') ? THEME_COLORS.barLight[i % THEME_COLORS.barLight.length] : THEME_COLORS.barDark[i % THEME_COLORS.barDark.length]} 
+                                                    stroke="rgba(0,0,0,0.1)"
+                                                    strokeWidth={2}
+                                                    className="pie-cell-hover"
+                                                />
                                             ))}
                                         </Pie>
                                         <Tooltip content={<CustomTooltip />} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             ) : <NoData />}
+                            {categoryData && categoryData.length > 0 && (
+                                <div className="pie-center-label">
+                                    <span className="pie-center-value">{categoryData.length}</span>
+                                    <span className="pie-center-text">Categories</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
+                    {/* Top Stocked Products */}
                     <div className="chart-card">
                         <div className="chart-card-header">
                             <div className="chart-icon trophy"><Icons.Trophy /></div>
@@ -357,25 +479,33 @@ const Analytics = () => {
                         <div className="chart-container">
                             {topProducts && topProducts.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={topProducts} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                                        <XAxis type="number" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} />
-                                        <YAxis type="category" dataKey="name" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} width={100} />
+                                    <BarChart data={topProducts} layout="vertical" margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.06)" horizontal={false} />
+                                        <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }} />
+                                        <YAxis type="category" dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }} width={80} />
                                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                                        <Bar dataKey="stock" name="Units" fill="#f1c40f" radius={[0, 8, 8, 0]} barSize={25} />
+                                        <Bar dataKey="stock" name="Units" fill="var(--text-main)" radius={[0, 4, 4, 0]} barSize={14}>
+                                            {topProducts.map((_, i) => (
+                                                <Cell 
+                                                    key={i} 
+                                                    fill={document.body.classList.contains('light-theme') ? THEME_COLORS.barLight[i % THEME_COLORS.barLight.length] : THEME_COLORS.barDark[i % THEME_COLORS.barDark.length]} 
+                                                />
+                                            ))}
+                                        </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : <NoData />}
                         </div>
                     </div>
 
+                    {/* Inventory Health */}
                     <div className="chart-card">
                         <div className="chart-card-header">
                             <div className="chart-icon health"><Icons.Health /></div>
                             <h3>Inventory Health</h3>
                         </div>
                         {stockHealth ? (
-                            <div>
+                            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                                 <div className="health-grid">
                                     <div className="health-tile healthy">
                                         <div className="health-count">{stockHealth.healthy}</div>
@@ -396,11 +526,397 @@ const Analytics = () => {
                             </div>
                         ) : <NoData />}
                     </div>
+
+                    {/* Nodemailer SMTP Settings Control Panel */}
+                    {/* Nodemailer SMTP Settings Control Panel */}
+                    {!emailSettings.configured ? (
+                    <div className="chart-card smtp-config-card">
+                        <div className="smtp-header-pro">
+                            <div>
+                                <h3>Email Configuration</h3>
+                                <p>Set up SMTP credentials to enable automated stock alerts.</p>
+                            </div>
+                            <span className="status-badge-pro inactive"><Icons.Alert size={14} /> Not Configured</span>
+                        </div>
+                        <div className="smtp-content-pro">
+                            <form className="smtp-form-pro" onSubmit={handleSaveEmailSettings}>
+                                <div className="form-group-pro">
+                                    <label htmlFor="adminEmailInput">Sender Email Address</label>
+                                    <input 
+                                        type="email" 
+                                        id="adminEmailInput"
+                                        placeholder="your_email@gmail.com" 
+                                        value={emailSettings.adminEmail}
+                                        onChange={(e) => setEmailSettings({...emailSettings, adminEmail: e.target.value})}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group-pro">
+                                    <label htmlFor="appPasswordInput">App Password</label>
+                                    <div className="password-input-pro">
+                                        <input 
+                                            type={showPassword ? "text" : "password"} 
+                                            id="appPasswordInput"
+                                            placeholder="16-character Google app password" 
+                                            value={emailSettings.appPassword}
+                                            onChange={(e) => setEmailSettings({...emailSettings, appPassword: e.target.value})}
+                                            required
+                                        />
+                                        <button 
+                                            type="button"
+                                            className="toggle-pwd-pro"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            tabIndex="-1"
+                                        >
+                                            {showPassword ? <Icons.EyeHide size={16} /> : <Icons.EyeShow size={16} />}
+                                        </button>
+                                    </div>
+                                    <small className="help-text-pro">
+                                        Generate an App Password in your Google Account Security settings.
+                                    </small>
+                                </div>
+
+                                {feedbackMessage.text && (
+                                    <div className={`feedback-banner-pro ${feedbackMessage.type}`}>
+                                        {feedbackMessage.type === 'success' ? <Icons.Success size={16} /> : <Icons.Alert size={16} />}
+                                        <span>{feedbackMessage.text}</span>
+                                    </div>
+                                )}
+
+                                <div className="smtp-actions-pro">
+                                    <button 
+                                        type="submit" 
+                                        className="btn-pro primary"
+                                        disabled={settingsLoading}
+                                    >
+                                        {settingsLoading ? 'Saving Changes...' : 'Save Configuration'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    ) : (
+                    <div className="chart-card smtp-config-card smtp-configured-banner">
+                        <div className="smtp-configured-inner">
+                            <div className="smtp-configured-icon">
+                                <Icons.Success size={22} />
+                            </div>
+                            <div>
+                                <p className="smtp-configured-title">Email Alerts Active</p>
+                                <p className="smtp-configured-sub">Automated stock alerts are configured and sending from <strong>{emailSettings.currentEmail || 'your Gmail account'}</strong>.</p>
+                            </div>
+                            <button
+                                className="btn-pro secondary smtp-reconfigure-btn"
+                                onClick={() => setEmailSettings(prev => ({ ...prev, configured: false }))}
+                            >
+                                Reconfigure
+                            </button>
+                        </div>
+                        {feedbackMessage.text && (
+                            <div className={`feedback-banner-pro ${feedbackMessage.type}`} style={{marginTop: '1rem'}}>
+                                {feedbackMessage.type === 'success' ? <Icons.Success size={16} /> : <Icons.Alert size={16} />}
+                                <span>{feedbackMessage.text}</span>
+                            </div>
+                        )}
+                    </div>
+                    )}
+
                 </div>
+
+                {/* ── Stock Forecasting Section ── */}
+                <ForecastSection
+                    forecastData={forecastData}
+                    forecastLoading={forecastLoading}
+                    forecastSearch={forecastSearch}
+                    setForecastSearch={setForecastSearch}
+                    forecastSort={forecastSort}
+                    setForecastSort={setForecastSort}
+                    forecastChartProduct={forecastChartProduct}
+                    setForecastChartProduct={setForecastChartProduct}
+                    onRefresh={fetchForecast}
+                />
+
             </div>
         </div>
     );
-;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stock Forecasting Sub-Component
+// ─────────────────────────────────────────────────────────────────────────────
+const STATUS_META = {
+    critical: { label: 'Critical',  color: '#f43f5e', bg: 'rgba(244,63,94,0.08)',   border: 'rgba(244,63,94,0.2)' },
+    warning:  { label: 'Warning',   color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)' },
+    healthy:  { label: 'Healthy',   color: '#10b981', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)' },
+    stable:   { label: 'Stable',    color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)' },
+};
+
+const ForecastSection = ({
+    forecastData, forecastLoading, forecastSearch, setForecastSearch,
+    forecastSort, setForecastSort, forecastChartProduct, setForecastChartProduct, onRefresh
+}) => {
+    // Build 30-day projected decay points for selected product
+    const decayPoints = useMemo(() => {
+        if (!forecastChartProduct) return [];
+        const { currentStock, salesVelocity } = forecastChartProduct;
+        const pts = [];
+        for (let d = 0; d <= 30; d++) {
+            const projected = Math.max(0, currentStock - salesVelocity * d);
+            pts.push({ day: `Day ${d}`, stock: Math.round(projected) });
+        }
+        return pts;
+    }, [forecastChartProduct]);
+
+    // Filtered + sorted table rows
+    const tableRows = useMemo(() => {
+        let rows = forecastData.filter(r =>
+            r.productName.toLowerCase().includes(forecastSearch.toLowerCase())
+        );
+        rows = [...rows].sort((a, b) => {
+            let va = a[forecastSort.key], vb = b[forecastSort.key];
+            if (typeof va === 'string') va = va.toLowerCase();
+            if (typeof vb === 'string') vb = vb.toLowerCase();
+            if (va < vb) return forecastSort.dir === 'asc' ? -1 : 1;
+            if (va > vb) return forecastSort.dir === 'asc' ? 1 : -1;
+            return 0;
+        });
+        return rows;
+    }, [forecastData, forecastSearch, forecastSort]);
+
+    const kpi = useMemo(() => ({
+        critical: forecastData.filter(r => r.status === 'critical').length,
+        warning:  forecastData.filter(r => r.status === 'warning').length,
+        healthy:  forecastData.filter(r => r.status === 'healthy').length,
+        stable:   forecastData.filter(r => r.status === 'stable').length,
+        avgDays:  forecastData.length
+            ? Math.round(forecastData.filter(r => r.status !== 'stable').reduce((s, r) => s + (r.daysRemaining || 0), 0)
+                / (forecastData.filter(r => r.status !== 'stable').length || 1))
+            : 0,
+    }), [forecastData]);
+
+    const handleSort = (key) => {
+        setForecastSort(prev => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' }));
+    };
+
+    const SortArrow = ({ col }) => (
+        <span style={{ marginLeft: '4px', opacity: forecastSort.key === col ? 1 : 0.3, fontSize: '0.7rem' }}>
+            {forecastSort.key === col ? (forecastSort.dir === 'asc' ? '▲' : '▼') : '▲'}
+        </span>
+    );
+
+    const runoutDay = forecastChartProduct
+        ? (forecastChartProduct.salesVelocity > 0
+            ? Math.min(30, Math.ceil(forecastChartProduct.daysRemaining))
+            : null)
+        : null;
+
+    return (
+        <div className="forecast-section">
+            {/* Section header */}
+            <div className="forecast-header">
+                <div className="forecast-header-text">
+                    <div className="forecast-header-icon"><Icons.Trend size={22}/></div>
+                    <div>
+                        <h2>Stock Forecasting</h2>
+                        <p>Projected runout dates based on 30-day sales velocity</p>
+                    </div>
+                </div>
+                <button className="forecast-refresh-btn" onClick={onRefresh} disabled={forecastLoading}>
+                    <Icons.Refresh size={15} />
+                    {forecastLoading ? 'Loading...' : 'Refresh'}
+                </button>
+            </div>
+
+            {forecastLoading ? (
+                <div className="forecast-loading">
+                    <div className="analytics-spinner" />
+                    <p>Calculating stock velocity...</p>
+                </div>
+            ) : forecastData.length === 0 ? (
+                <div className="forecast-loading">
+                    <div className="no-data-icon"><Icons.Alert /></div>
+                    <p>No forecasting data available. Add stock movements to generate velocity data.</p>
+                </div>
+            ) : (
+                <>
+                    {/* KPI Cards */}
+                    <div className="forecast-kpi-grid">
+                        <div className="forecast-kpi-card critical">
+                            <div className="forecast-kpi-value">{kpi.critical}</div>
+                            <div className="forecast-kpi-label">Critical (&lt;7 days)</div>
+                            <div className="forecast-kpi-sub">Restock immediately</div>
+                        </div>
+                        <div className="forecast-kpi-card warning">
+                            <div className="forecast-kpi-value">{kpi.warning}</div>
+                            <div className="forecast-kpi-label">Warning (&lt;15 days)</div>
+                            <div className="forecast-kpi-sub">Plan reorder soon</div>
+                        </div>
+                        <div className="forecast-kpi-card healthy">
+                            <div className="forecast-kpi-value">{kpi.healthy}</div>
+                            <div className="forecast-kpi-label">Healthy (≥15 days)</div>
+                            <div className="forecast-kpi-sub">Stock level is fine</div>
+                        </div>
+                        <div className="forecast-kpi-card stable">
+                            <div className="forecast-kpi-value">{kpi.stable}</div>
+                            <div className="forecast-kpi-label">Stable (no outbound)</div>
+                            <div className="forecast-kpi-sub">No outbound movement</div>
+                        </div>
+                        <div className="forecast-kpi-card avg">
+                            <div className="forecast-kpi-value">{kpi.avgDays}<span className="forecast-kpi-unit">d</span></div>
+                            <div className="forecast-kpi-label">Avg Days Remaining</div>
+                            <div className="forecast-kpi-sub">Across active products</div>
+                        </div>
+                        <div className="forecast-kpi-card total">
+                            <div className="forecast-kpi-value">{forecastData.length}</div>
+                            <div className="forecast-kpi-label">Total Products</div>
+                            <div className="forecast-kpi-sub">In forecast analysis</div>
+                        </div>
+                    </div>
+
+                    {/* Interactive Decay Chart */}
+                    <div className="forecast-chart-card">
+                        <div className="forecast-chart-header">
+                            <div>
+                                <h3>30-Day Stock Decay Projection</h3>
+                                <p className="forecast-chart-sub">
+                                    {forecastChartProduct
+                                        ? `${forecastChartProduct.productName} · Velocity: ${forecastChartProduct.salesVelocity.toFixed(2)} units/day`
+                                        : 'Select a product'}
+                                </p>
+                            </div>
+                            <select
+                                className="forecast-product-select"
+                                value={forecastChartProduct?.productId || ''}
+                                onChange={e => {
+                                    const found = forecastData.find(r => String(r.productId) === e.target.value);
+                                    if (found) setForecastChartProduct(found);
+                                }}
+                            >
+                                {forecastData.map(r => (
+                                    <option key={r.productId} value={r.productId}>{r.productName}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="forecast-chart-container">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={decayPoints} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
+                                    <defs>
+                                        <linearGradient id="stockGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false}/>
+                                    <XAxis dataKey="day" tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'JetBrains Mono' }} interval={4}/>
+                                    <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'JetBrains Mono' }}/>
+                                    <Tooltip content={<CustomTooltip />}/>
+                                    {runoutDay !== null && runoutDay <= 30 && (
+                                        <ReferenceLine
+                                            x={`Day ${runoutDay}`}
+                                            stroke="#f43f5e"
+                                            strokeDasharray="6 3"
+                                            label={{ value: 'Runout', fill: '#f43f5e', fontSize: 10, fontWeight: 700 }}
+                                        />
+                                    )}
+                                    <Area
+                                        type="monotone"
+                                        dataKey="stock"
+                                        name="Projected Stock"
+                                        stroke="#6366f1"
+                                        strokeWidth={2.5}
+                                        fill="url(#stockGradient)"
+                                        dot={false}
+                                        activeDot={{ r: 5, fill: '#6366f1' }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Forecast Table */}
+                    <div className="forecast-table-card">
+                        <div className="forecast-table-toolbar">
+                            <h3>Forecast Table</h3>
+                            <div className="forecast-search-wrapper">
+                                <Icons.Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }}/>
+                                <input
+                                    type="text"
+                                    placeholder="Search products..."
+                                    value={forecastSearch}
+                                    onChange={e => setForecastSearch(e.target.value)}
+                                    className="forecast-search-input"
+                                />
+                            </div>
+                        </div>
+                        <div className="forecast-table-wrapper">
+                            <table className="forecast-table">
+                                <thead>
+                                    <tr>
+                                        <th onClick={() => handleSort('productName')} className="sortable">
+                                            Product <SortArrow col="productName"/>
+                                        </th>
+                                        <th onClick={() => handleSort('currentStock')} className="sortable">
+                                            Current Stock <SortArrow col="currentStock"/>
+                                        </th>
+                                        <th onClick={() => handleSort('salesVelocity')} className="sortable">
+                                            Velocity (u/day) <SortArrow col="salesVelocity"/>
+                                        </th>
+                                        <th onClick={() => handleSort('daysRemaining')} className="sortable">
+                                            Days Remaining <SortArrow col="daysRemaining"/>
+                                        </th>
+                                        <th onClick={() => handleSort('status')} className="sortable">
+                                            Status <SortArrow col="status"/>
+                                        </th>
+                                        <th>Chart</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tableRows.length === 0 ? (
+                                        <tr><td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No products match your search.</td></tr>
+                                    ) : tableRows.map((row) => {
+                                        const meta = STATUS_META[row.status] || STATUS_META.stable;
+                                        const isSelected = forecastChartProduct?.productId === row.productId;
+                                        return (
+                                            <tr key={row.productId} className={isSelected ? 'forecast-row-selected' : ''}>
+                                                <td className="forecast-product-name">{row.productName}</td>
+                                                <td className="forecast-mono">{row.currentStock.toLocaleString()}</td>
+                                                <td className="forecast-mono">{row.salesVelocity.toFixed(2)}</td>
+                                                <td className="forecast-mono">
+                                                    {row.status === 'stable' ? '—' : (
+                                                        <span style={{ color: meta.color, fontWeight: 700 }}>
+                                                            {row.daysRemaining > 999 ? '999+' : Math.round(row.daysRemaining)}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <span className="forecast-badge" style={{ color: meta.color, background: meta.bg, border: `1px solid ${meta.border}` }}>
+                                                        {meta.label}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="forecast-chart-btn"
+                                                        onClick={() => setForecastChartProduct(row)}
+                                                        title="View decay chart"
+                                                    >
+                                                        <Icons.Trend size={13}/>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="forecast-table-footer">
+                            Showing {tableRows.length} of {forecastData.length} products
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
 };
 
 export default Analytics;

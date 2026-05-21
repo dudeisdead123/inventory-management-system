@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
+import { useToast } from '../contexts/ToastContext';
 import './StockManagement.css';
+import { Icons } from './Icons';
+import { API_BASE_URL, apiUrl } from '../config/api';
 
 const StockManagement = () => {
     const { productId } = useParams();
+    const { showToast } = useToast();
     const [product, setProduct] = useState(null);
     const [locations, setLocations] = useState([]);
     const [movements, setMovements] = useState([]);
@@ -60,7 +64,7 @@ const StockManagement = () => {
         const currentToken = localStorage.getItem('auth-token');
         if (currentToken) {
             import('socket.io-client').then(({ io }) => {
-                const socket = io('http://localhost:3001');
+                const socket = io(API_BASE_URL);
                 socket.on('stockUpdated', (data) => {
                     if (data.productId === productId) {
                         fetchProduct();
@@ -75,7 +79,7 @@ const StockManagement = () => {
     const fetchProduct = async () => {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3001/products/${productId}`, {
+            const response = await fetch(apiUrl(`/products/${productId}`), {
                 headers: {
                     'auth-token': token,
                     'Content-Type': 'application/json'
@@ -96,7 +100,7 @@ const StockManagement = () => {
     const fetchLocations = async () => {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch('http://localhost:3001/locations', {
+            const response = await fetch(apiUrl('/locations'), {
                 headers: {
                     'auth-token': token,
                     'Content-Type': 'application/json'
@@ -114,7 +118,7 @@ const StockManagement = () => {
             } else {
                 console.log('No locations found - may need to initialize');
                 // Try to initialize locations if none found
-                const initResponse = await fetch('http://localhost:3001/initialize-locations', {
+                const initResponse = await fetch(apiUrl('/initialize-locations'), {
                     method: 'POST',
                     headers: {
                         'auth-token': token,
@@ -136,7 +140,7 @@ const StockManagement = () => {
     const fetchMovements = async () => {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3001/stock/movements/${productId}`, {
+            const response = await fetch(apiUrl(`/stock/movements/${productId}`), {
                 headers: {
                     'auth-token': token,
                     'Content-Type': 'application/json'
@@ -156,7 +160,7 @@ const StockManagement = () => {
     const fetchStockLimits = async () => {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3001/products/${productId}/stock-limits`, {
+            const response = await fetch(apiUrl(`/products/${productId}/stock-limits`), {
                 headers: {
                     'auth-token': token,
                     'Content-Type': 'application/json'
@@ -178,13 +182,13 @@ const StockManagement = () => {
         
         if (!newLimits.location || newLimits.minStockLevel < 0 || newLimits.maxStockLevel <= 0 || 
             parseInt(newLimits.minStockLevel) >= parseInt(newLimits.maxStockLevel)) {
-            alert('Please provide valid limits: Min should be >= 0, Max should be > Min');
+            showToast('Please provide valid limits: Min should be >= 0, Max should be > Min', 'warning');
             return;
         }
 
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3001/products/${productId}/stock-limits`, {
+            const response = await fetch(apiUrl(`/products/${productId}/stock-limits`), {
                 method: 'PUT',
                 headers: {
                     'auth-token': token,
@@ -199,31 +203,31 @@ const StockManagement = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                alert(data.message);
+                showToast(data.message || 'Stock limits updated successfully!', 'success');
                 setNewLimits({ location: '', minStockLevel: 0, maxStockLevel: 1000 });
                 setShowLimitsForm(false);
                 fetchStockLimits();
                 fetchProduct(); // Refresh product data
             } else {
                 const error = await response.json();
-                alert(error.error || 'Failed to add stock limits');
+                showToast(error.error || 'Failed to add stock limits', 'error');
             }
         } catch (error) {
             console.error('Error adding stock limits:', error);
-            alert('Network error occurred');
+            showToast('Network error occurred', 'error');
         }
     };
 
     // Update existing stock limits
     const handleUpdateStockLimits = async (location, minStockLevel, maxStockLevel) => {
         if (minStockLevel < 0 || maxStockLevel <= 0 || parseInt(minStockLevel) >= parseInt(maxStockLevel)) {
-            alert('Please provide valid limits: Min should be >= 0, Max should be > Min');
+            showToast('Please provide valid limits: Min should be >= 0, Max should be > Min', 'warning');
             return;
         }
 
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3001/products/${productId}/stock-limits`, {
+            const response = await fetch(apiUrl(`/products/${productId}/stock-limits`), {
                 method: 'PUT',
                 headers: {
                     'auth-token': token,
@@ -238,7 +242,7 @@ const StockManagement = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                alert(data.message);
+                showToast(data.message || 'Stock limits updated successfully!', 'success');
                 setEditingLimits({
                     ...editingLimits,
                     [location]: undefined
@@ -247,11 +251,11 @@ const StockManagement = () => {
                 fetchProduct(); // Refresh product data
             } else {
                 const error = await response.json();
-                alert(error.error || 'Failed to update stock limits');
+                showToast(error.error || 'Failed to update stock limits', 'error');
             }
         } catch (error) {
             console.error('Error updating stock limits:', error);
-            alert('Network error occurred');
+            showToast('Network error occurred', 'error');
         }
     };
 
@@ -260,29 +264,29 @@ const StockManagement = () => {
         
         // Validation
         if (!quantity || quantity <= 0) {
-            alert('Please enter a valid quantity');
+            showToast('Please enter a valid quantity', 'warning');
             return;
         }
         
         if (operationType === 'transfer') {
             if (!fromLocation || !toLocation) {
-                alert('Please select both from and to locations for transfer');
+                showToast('Please select both from and to locations for transfer', 'warning');
                 return;
             }
             if (fromLocation === toLocation) {
-                alert('From and To locations cannot be the same');
+                showToast('From and To locations cannot be the same', 'warning');
                 return;
             }
         } else {
             if (!selectedLocation) {
-                alert('Please select a location');
+                showToast('Please select a location', 'warning');
                 return;
             }
         }
 
         try {
             const token = localStorage.getItem('auth-token');
-            let url = `http://localhost:3001/stock/${operationType}/${productId}`;
+            let url = apiUrl(`/stock/${operationType}/${productId}`);
             let body = { 
                 location: selectedLocation || 'main-warehouse', 
                 quantity: parseInt(quantity), 
@@ -312,7 +316,7 @@ const StockManagement = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                alert(data.message);
+                showToast(data.message || 'Stock operation completed successfully!', 'success');
                 setQuantity('');
                 setReason('');
                 setReference('');
@@ -323,18 +327,15 @@ const StockManagement = () => {
                 
                 // Handle validation errors with detailed messages
                 if (error.type === 'validation_error') {
-                    const message = `${error.error}\n\nDetails:\n` +
-                        `• Current Stock: ${error.currentStock}\n` +
-                        `• Maximum Allowed: ${error.maxStock}\n` +
-                        `• Requested Quantity: ${error.requestedQuantity}`;
-                    alert(message);
+                    const message = `${error.error}. Current Stock: ${error.currentStock}, Max Capacity: ${error.maxStock}, Requested: ${error.requestedQuantity}`;
+                    showToast(message, 'error');
                 } else {
-                    alert(error.error || 'Operation failed');
+                    showToast(error.error || 'Operation failed', 'error');
                 }
             }
         } catch (error) {
             console.error('Error performing stock operation:', error);
-            alert('Network error occurred');
+            showToast('Network error occurred', 'error');
         }
     };
 
@@ -342,7 +343,7 @@ const StockManagement = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch('http://localhost:3001/locations', {
+            const response = await fetch(apiUrl('/locations'), {
                 method: 'POST',
                 headers: {
                     'auth-token': token,
@@ -352,7 +353,7 @@ const StockManagement = () => {
             });
 
             if (response.ok) {
-                alert('Location added successfully');
+                showToast('Location added successfully!', 'success');
                 setShowLocationForm(false);
                 setNewLocation({
                     locationId: '',
@@ -364,11 +365,11 @@ const StockManagement = () => {
                 fetchLocations();
             } else {
                 const error = await response.json();
-                alert(error.error || 'Failed to add location');
+                showToast(error.error || 'Failed to add location', 'error');
             }
         } catch (error) {
             console.error('Error adding location:', error);
-            alert('Network error occurred');
+            showToast('Network error occurred', 'error');
         }
     };
 
@@ -419,7 +420,7 @@ const StockManagement = () => {
                 <div className="header-actions">
                     <NavLink to="/products" className="btn btn-secondary">
                         <span className="btn-arrow">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                            <Icons.ArrowLeft size={20} strokeWidth={3} />
                         </span> Back to Products
                     </NavLink>
                 </div>
@@ -453,38 +454,55 @@ const StockManagement = () => {
                         <h3>Stock by Location</h3>
                         {product.locationStock && product.locationStock.length > 0 ? (
                             <div className="location-stock-grid">
-                                {product.locationStock.map((location, index) => (
-                                    <div key={index} className="location-card">
-                                        <div className="location-header">
-                                            <h4>{location.location}</h4>
-                                            <span className={`stock-level ${getStockLevelClass(location.quantity, location.minStockLevel)}`}>
-                                                {location.quantity} units
-                                            </span>
+                                {product.locationStock.map((location, index) => {
+                                    const utilizationPercent = Math.min(100, Math.max(0, (location.quantity / (location.maxStockLevel || 1000)) * 100));
+                                    return (
+                                        <div key={index} className="location-card">
+                                            <div className="location-header">
+                                                <h4>{location.location.toUpperCase()}</h4>
+                                                <span className={`stock-level-badge ${getStockLevelClass(location.quantity, location.minStockLevel)}`}>
+                                                    {location.quantity} units
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="capacity-bar-wrapper">
+                                                <div className="capacity-bar-track">
+                                                    <div 
+                                                        className={`capacity-bar-fill ${getStockLevelClass(location.quantity, location.minStockLevel)}`}
+                                                        style={{ width: `${utilizationPercent}%` }}
+                                                    ></div>
+                                                </div>
+                                                <div className="capacity-bar-text">
+                                                    <span>Utilization:</span>
+                                                    <span>{utilizationPercent.toFixed(0)}%</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="location-details">
+                                                <div className="detail-row">
+                                                    <span>Available:</span>
+                                                    <strong>{location.quantity}</strong>
+                                                </div>
+                                                <div className="detail-row">
+                                                    <span>Reserved:</span>
+                                                    <span>{location.reservedQuantity || 0}</span>
+                                                </div>
+                                                <div className="detail-row">
+                                                    <span>Damaged:</span>
+                                                    <span>{location.damagedQuantity || 0}</span>
+                                                </div>
+                                                <div className="detail-row flex-highlight">
+                                                    <span>Min Alert Level:</span>
+                                                    <span>{location.minStockLevel}</span>
+                                                </div>
+                                                <div className="detail-row flex-highlight">
+                                                    <span>Max Cap Level:</span>
+                                                    <span>{location.maxStockLevel}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="location-details">
-                                            <div className="detail-row">
-                                                <span>Available:</span>
-                                                <span>{location.quantity}</span>
-                                            </div>
-                                            <div className="detail-row">
-                                                <span>Reserved:</span>
-                                                <span>{location.reservedQuantity || 0}</span>
-                                            </div>
-                                            <div className="detail-row">
-                                                <span>Damaged:</span>
-                                                <span>{location.damagedQuantity || 0}</span>
-                                            </div>
-                                            <div className="detail-row">
-                                                <span>Min Level:</span>
-                                                <span>{location.minStockLevel}</span>
-                                            </div>
-                                            <div className="detail-row">
-                                                <span>Max Level:</span>
-                                                <span>{location.maxStockLevel}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="no-stock-message">

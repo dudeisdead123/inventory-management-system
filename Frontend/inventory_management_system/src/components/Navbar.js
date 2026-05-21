@@ -1,12 +1,44 @@
-import React, { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { useLocation } from 'react-router-dom'
-import './Navbar.css'
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useLocation, NavLink } from 'react-router-dom';
+import './Navbar.css';import { Icons } from './Icons';
+
+const BrandLogo = () => (
+  <div style={{ display: 'flex', alignItems: 'center' }}>
+    <Icons.Brand size={28} style={{ marginRight: '8px', color: 'var(--text-main)' }} strokeWidth={2} />
+  </div>
+);
+
+const HomeIcon = () => <Icons.Dashboard size={16} style={{ marginRight: '6px' }} />;
+const ProductsIcon = () => <Icons.Products size={16} style={{ marginRight: '6px' }} />;
+const StockIcon = () => <Icons.Stock size={16} style={{ marginRight: '6px' }} />;
+const AnalyticsIcon = () => <Icons.FeatureChart size={16} style={{ marginRight: '6px' }} />;
 
 export default function Navbar(props) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [isLight, setIsLight] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved === 'light';
+  });
+
+  useEffect(() => {
+    if (isLight) {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+  }, [isLight]);
+
+  const toggleTheme = () => {
+    setIsLight(prev => {
+      const next = !prev;
+      localStorage.setItem('theme', next ? 'light' : 'dark');
+      return next;
+    });
+  };
 
   const handleLogout = () => {
     logout();
@@ -16,11 +48,15 @@ export default function Navbar(props) {
   return (
     <nav className="navbar-modern">
       <div className="navbar-container">
-
+        <NavLink to="/" className="navbar-brand" onClick={() => setIsMobileMenuOpen(false)}>
+          <BrandLogo />
+          <span className="brand-name">Inventory Hub</span>
+        </NavLink>
 
         <button 
           className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle navigation menu"
         >
           <span></span>
           <span></span>
@@ -30,61 +66,85 @@ export default function Navbar(props) {
         <div className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
           <ul className="navbar-links">
             <li>
-              <a href="/" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                {location.pathname !== '/' && (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-arrow" style={{ marginRight: '8px' }}>
-                    <path d="m15 18-6-6 6-6"/>
-                  </svg>
-                )}
+              <NavLink 
+                to="/" 
+                className={({ isActive }) => `nav-link ${isActive ? 'active-link' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <HomeIcon />
                 Dashboard
-              </a>
+              </NavLink>
             </li>
             {user?.role !== 'customer' && (
               <>
                 <li>
-                  <a href="/products" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-
+                  <NavLink 
+                    to="/products" 
+                    className={({ isActive }) => `nav-link ${isActive ? 'active-link' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <ProductsIcon />
                     Products
-                  </a>
+                  </NavLink>
                 </li>
                 <li>
-                  <a href="/stock-dashboard" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                  <NavLink 
+                    to="/stock-dashboard" 
+                    className={({ isActive }) => `nav-link ${isActive ? 'active-link' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <StockIcon />
                     Stock Dashboard
-                  </a>
+                  </NavLink>
                 </li>
                 <li>
-                  <a href="/analytics" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                  <NavLink 
+                    to="/analytics" 
+                    className={({ isActive }) => `nav-link ${isActive ? 'active-link' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <AnalyticsIcon />
                     Analytics
-                  </a>
+                  </NavLink>
                 </li>
               </>
             )}
           </ul>
 
-          {user && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              className="theme-toggle-btn" 
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+            >
+              {isLight ? (
+                <Icons.ThemeLight size={18} />
+              ) : (
+                <Icons.ThemeDark size={18} />
+              )}
+            </button>
+
+            {user && (
             <div className="navbar-user">
               <div className="user-info">
                 <span className="user-icon">
                   {user.role === 'customer' ? (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', verticalAlign: 'middle' }}>
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
+                    <Icons.Customers size={18} style={{ verticalAlign: 'middle' }} />
                   ) : (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', verticalAlign: 'middle' }}>
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
+                    <Icons.Admin size={18} style={{ verticalAlign: 'middle' }} />
                   )}
                 </span>
                 <span className="user-name">{user.name}</span>
               </div>
               <button className="logout-btn" onClick={handleLogout}>
+                <Icons.Logout size={18} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
                 Log out
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </nav>
-  )
+  );
 }

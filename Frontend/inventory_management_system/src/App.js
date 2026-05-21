@@ -10,6 +10,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import CustomerDashboard from './components/CustomerDashboard';
 import Analytics from './components/Analytics';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+import ChatAssistant from './components/ChatAssistant';
 
 import {
   BrowserRouter as Router,
@@ -44,6 +46,7 @@ const AppContent = () => {
               </>
             )}
           </Routes>
+          <ChatAssistant />
         </Router>
     </div>
   );
@@ -52,9 +55,11 @@ const AppContent = () => {
 function App() {
   return (
     <AuthProvider>
-      <ProtectedRoute>
-        <AppContent />
-      </ProtectedRoute>
+      <ToastProvider>
+        <ProtectedRoute>
+          <AppContent />
+        </ProtectedRoute>
+      </ToastProvider>
     </AuthProvider>
   );
 }

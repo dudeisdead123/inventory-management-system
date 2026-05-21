@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { NavLink, useParams, useNavigate } from 'react-router-dom';
-import './InsertProduct.css'; 
+import { useToast } from '../contexts/ToastContext';
+import './InsertProduct.css';
+import { apiUrl } from '../config/api';
 
 export default function UpdateProduct() {
     const [productName, setProductName] = useState("");
@@ -24,13 +26,14 @@ export default function UpdateProduct() {
         setProductBarcode(value);
     };
 
-    const {id} = useParams("");
+    const { id } = useParams("");
+    const { showToast } = useToast();
 
     useEffect(() => {
         const getProduct = async () => {
           try {
             const token = localStorage.getItem('auth-token');
-            const res = await fetch(`http://localhost:3001/products/${id}`, {
+            const res = await fetch(apiUrl(`/products/${id}`), {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -48,9 +51,11 @@ export default function UpdateProduct() {
               setGlobalMinStock(data.globalMinStock || 10);
             } else {
               console.log("Something went wrong. Please try again.");
+              showToast("Failed to retrieve product details.", "error");
             }
           } catch (err) {
             console.log(err);
+            showToast("Failed to retrieve product details.", "error");
           }
         };
       
@@ -62,6 +67,7 @@ export default function UpdateProduct() {
 
         if (!productName || !productPrice || !productBarcode) {
             setError("*Please fill in all the required fields.");
+            showToast("Please fill in all the required fields.", "warning");
             return;
         }
 
@@ -70,7 +76,7 @@ export default function UpdateProduct() {
 
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(`http://localhost:3001/updateproduct/${id}`, {
+            const response = await fetch(apiUrl(`/updateproduct/${id}`), {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -87,13 +93,15 @@ export default function UpdateProduct() {
             await response.json();
 
             if (response.status === 201) {
-                alert("Data Updated");
+                showToast("Product updated successfully!", "success");
                 navigate('/products');
             }
             else {
+                showToast("Something went wrong. Please try again.", "error");
                 setError("Something went wrong. Please try again.");
             }
         } catch (err) {
+            showToast("An error occurred. Please try again later.", "error");
             setError("An error occurred. Please try again later.");
             console.log(err);
         } finally {

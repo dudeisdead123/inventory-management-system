@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const SystemSettings = require('../Models/SystemSettings');
+const { query } = require('../db');
 
 // Internal state
 let emailConfig = {
@@ -10,12 +10,17 @@ let emailConfig = {
 
 let transporter = null;
 
+function getFrontendUrl() {
+    const raw = process.env.FRONTEND_PUBLIC_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+    return raw.split(',')[0].trim().replace(/\/$/, '');
+}
+
 // Initialize transporter from DB on startup
 async function initEmailService() {
     try {
-        const settings = await SystemSettings.findOne({ key: 'email_config' });
-        if (settings && settings.value) {
-            const { adminEmail, appPassword } = settings.value;
+        const res = await query("SELECT value FROM system_settings WHERE key = $1", ['email_config']);
+        if (res.rows.length > 0 && res.rows[0].value) {
+            const { adminEmail, appPassword } = res.rows[0].value;
             await configureTransporter(adminEmail, appPassword, false); // false = don't save again
             console.log('Email service initialized from persistent settings.');
         } else {
@@ -41,13 +46,12 @@ async function configureTransporter(email, appPassword, shouldSave = true) {
     });
 
     if (shouldSave) {
-        await SystemSettings.findOneAndUpdate(
-            { key: 'email_config' },
-            { 
-                value: { adminEmail: email, appPassword: appPassword },
-                updatedAt: new Date()
-            },
-            { upsert: true, new: true }
+        await query(
+            `INSERT INTO system_settings (key, value, "updatedAt")
+             VALUES ($1, $2, NOW())
+             ON CONFLICT (key)
+             DO UPDATE SET value = EXCLUDED.value, "updatedAt" = NOW()`,
+            ['email_config', { adminEmail: email, appPassword: appPassword }]
         );
     }
 
@@ -150,7 +154,7 @@ async function sendLowStockEmail(product, location, currentQty, minQty, severity
                 </div>
             </div>
             <div class="footer">
-                <p>This is an automated alert from your <a href="http://localhost:3000/stock-dashboard">IMS Dashboard</a></p>
+                <p>This is an automated alert from your <a href="${getFrontendUrl()}/stock-dashboard">IMS Dashboard</a></p>
                 <p style="margin-top: 8px;">Please take action to restock this item.</p>
             </div>
         </div>

@@ -12,16 +12,17 @@ const ProtectedRoute = ({ children }) => {
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: '100vh',
-                background: '#ffffff'
+                background: 'var(--bg-dark)',
+                fontFamily: 'Inter, sans-serif'
             }}>
                 <div style={{
-                    background: '#fffdd0',
-                    color: '#000000',
-                    padding: '20px 40px',
-                    borderRadius: '10px',
+                    color: 'var(--text-main)',
                     fontWeight: '700',
-                    fontSize: '1rem'
+                    fontSize: '0.85rem',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase'
                 }}>
+                    Verifying session...
                 </div>
             </div>
         );

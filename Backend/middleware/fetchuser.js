@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'your_jwt_secret_key_here'; 
+const JWT_SECRET = require('../config/jwtSecret'); 
 
 const fetchuser = (req, res, next) => {
     // Get the user from the jwt token and add id to req object
@@ -10,6 +10,14 @@ const fetchuser = (req, res, next) => {
     }
     try {
         const data = jwt.verify(token, JWT_SECRET);
+        
+        // Ensure the user id is a valid integer (relational DB) to reject legacy MongoDB ObjectId hex strings
+        const userId = Number(data.user?.id);
+        if (isNaN(userId) || !Number.isInteger(userId)) {
+            res.status(401).send({ error: "Please authenticate using a valid token" });
+            return;
+        }
+        
         req.user = data.user;
         next();
     } catch (error) {

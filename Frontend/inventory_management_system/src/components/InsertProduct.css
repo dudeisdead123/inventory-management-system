@@ -4,26 +4,36 @@
 
 .product-page-wrapper {
   min-height: 100vh;
-  background: #efdfce !important; /* Specific sand-beige background */
+  background-color: var(--bg-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  font-family: 'Outfit', sans-serif;
+  padding: 5rem 1.5rem 3rem 1.5rem !important;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
 .product-form-container {
   width: 100%;
-  max-width: 600px;
+  max-width: 540px;
   margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
 .product-form-card {
-  background: #ffffff !important;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
-  padding: 40px;
-  animation: none !important; /* Remove slide animation */
+  background: var(--bg-card) !important;
+  border-radius: var(--radius-md);
+  padding: 2.5rem 2rem;
+  border: 1px solid var(--glass-border);
+  transition: var(--transition-base);
+  box-shadow: none !important;
+}
+
+.product-form-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================
@@ -32,26 +42,24 @@
 
 .form-header-section {
   text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #000000;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .form-main-title {
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-  background: none !important;
-  margin: 0 0 10px 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--white);
+  margin: 0 0 4px 0;
   letter-spacing: -0.5px;
 }
 
 .form-subtitle {
-  font-size: 1rem;
-  color: #000000;
+  font-size: 0.85rem;
+  color: var(--text-muted);
   margin: 0;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* ============================================
@@ -61,7 +69,7 @@
 .product-form {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 1.25rem;
 }
 
 /* ============================================
@@ -71,50 +79,52 @@
 .form-field-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   position: relative;
+  text-align: left;
 }
 
 .field-label {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #000000;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .required-star {
-  color: #ff1744;
-  font-size: 1.2rem;
+  color: var(--danger-color);
+  font-size: 0.95rem;
   font-weight: 900;
 }
 
 .field-input {
   width: 100%;
-  padding: 14px 16px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #000000;
-  background: #ffffff;
-  border: 2px solid #000000;
-  border-radius: 8px;
-  transition: none !important;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--input-text);
+  background: var(--input-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-base) !important;
   font-family: inherit;
   box-sizing: border-box;
 }
 
 .field-input::placeholder {
-  color: #666666;
+  color: var(--zinc-600);
   font-weight: 400;
 }
 
 .field-input:focus {
   outline: none;
-  border-color: #f1c40f;
-  background: #ffffff;
+  border-color: var(--border-focus);
+  background: var(--input-bg);
+  box-shadow: none;
 }
 
 /* ============================================
@@ -125,19 +135,20 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .currency-symbol {
   position: absolute;
-  left: 16px;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #000000;
+  left: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--input-text);
   pointer-events: none;
 }
 
 .price-input {
-  padding-left: 36px !important;
+  padding-left: 28px !important;
 }
 
 /* ============================================
@@ -145,10 +156,10 @@
    ============================================ */
 
 .helper-text {
-  font-size: 0.85rem;
-  color: #333333;
+  font-size: 0.7rem;
+  color: var(--text-muted);
   margin: 4px 0 0 0;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* ============================================
@@ -156,18 +167,17 @@
    ============================================ */
 
 .error-message-box {
-  background: #ff1744;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 25px;
+  background: rgba(244, 63, 94, 0.05);
+  color: var(--danger-color);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  animation: none !important;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 /* ============================================
@@ -176,54 +186,61 @@
 
 .form-button-group {
   display: flex;
-  gap: 15px;
-  margin-top: 35px;
-  padding-top: 25px;
-  border-top: 2px solid #000000;
+  gap: 12px;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--glass-border);
 }
 
 .btn-cancel,
 .btn-primary {
   flex: 1;
-  padding: 14px 24px;
-  border: 2px solid #000000;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 800;
+  padding: 0.75rem 1.5rem !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
   cursor: pointer;
-  transition: none !important;
+  transition: var(--transition-base) !important;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: none !important;
 }
 
 /* Cancel Button Styling */
 .btn-cancel {
-  background: #ffffff;
-  color: #000000;
+  background: transparent !important;
+  color: var(--white) !important;
+  border-color: var(--glass-border) !important;
 }
 
 .btn-cancel:hover {
-  background: #f3f3f3;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 /* Primary Button Styling */
 .btn-primary {
-  background: #f1c40f !important;
-  color: #000000 !important;
-  border: 2px solid #000000 !important;
+  background: var(--white) !important;
+  color: var(--bg-dark) !important;
+  border: 1px solid var(--white) !important;
 }
 
 .btn-primary:hover {
-  background: #e1b40d !important;
+  background: var(--zinc-200) !important;
+  border-color: var(--zinc-200) !important;
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
-  background: #cccccc !important;
+  opacity: 0.3;
+  background: var(--white) !important;
+  color: var(--bg-dark) !important;
+  border-color: var(--white) !important;
   cursor: not-allowed;
 }
 
@@ -233,7 +250,7 @@
 
 @media (max-width: 600px) {
   .product-form-card {
-    padding: 25px;
+    padding: 2rem 1.25rem;
   }
 
   .form-button-group {

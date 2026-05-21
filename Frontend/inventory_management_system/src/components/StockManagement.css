@@ -255,55 +255,92 @@
     max-width: 600px;
 }
 
+/* Mobile-first: stack options full width */
 .operation-type-selector {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     width: 100%;
     max-width: 100%;
     margin-bottom: 20px;
     box-sizing: border-box;
 }
 
-.operation-type-selector label {
+.operation-type-selector .operation-type-option {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-width: 0;
+    justify-content: flex-start;
+    gap: 12px;
     width: 100%;
+    min-height: 48px;
     box-sizing: border-box;
     cursor: pointer;
-    padding: 10px 8px;
+    padding: 12px 16px;
+    margin: 0;
     border-radius: var(--radius-sm);
     background: rgba(255, 255, 255, 0.01);
     border: 1px solid var(--glass-border);
     transition: var(--transition-base);
     font-weight: 600;
-    font-size: 0.75rem;
-    line-height: 1.25;
-    text-align: center;
-    white-space: normal;
-    word-break: break-word;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
     color: var(--text-muted);
 }
 
-.operation-type-selector label:hover {
+.operation-type-selector .operation-type-option:hover {
     background: rgba(255, 255, 255, 0.03);
     color: var(--white);
 }
 
-.operation-type-selector input[type="radio"] {
+.operation-type-selector .operation-type-option input[type="radio"] {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
     margin: 0;
     accent-color: var(--white);
     outline: none !important;
     box-shadow: none !important;
 }
 
-.operation-type-selector label:has(input[type="radio"]:checked) {
+.operation-type-selector .operation-type-text {
+    flex: 1;
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
+.operation-type-selector .operation-type-option:has(input[type="radio"]:checked) {
     border-color: var(--white) !important;
     background: rgba(255, 255, 255, 0.05) !important;
     color: var(--white) !important;
+}
+
+/* Desktop: three equal columns */
+@media (min-width: 993px) {
+    .operation-type-selector {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .operation-type-selector .operation-type-option {
+        justify-content: center;
+        padding: 12px 10px;
+        font-size: 0.8rem;
+    }
+
+    .operation-type-selector .operation-type-text {
+        flex: 0 1 auto;
+        text-align: center;
+    }
 }
 
 .form-grid {
@@ -596,8 +633,8 @@
   padding-top: 6px;
 }
 
-/* Mobile — stock operations & layout */
-@media (max-width: 768px) {
+/* Tablet & mobile — stack stock operation buttons (matches navbar breakpoint) */
+@media (max-width: 992px) {
   .stock-management {
     padding: 4.5rem 1rem 2rem !important;
   }
@@ -620,20 +657,8 @@
     grid-template-columns: 1fr;
   }
 
-  .operation-type-selector {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-
-  .operation-type-selector label {
-    justify-content: flex-start;
-    text-align: left;
-    padding: 12px 14px;
-    font-size: 0.85rem;
-  }
-
-  .light-theme .operation-type-selector label:hover,
-  .light-theme .operation-type-selector label:has(input[type="radio"]:checked) {
+  .light-theme .operation-type-selector .operation-type-option:hover,
+  .light-theme .operation-type-selector .operation-type-option:has(input[type="radio"]:checked) {
     color: var(--text-main) !important;
   }
 }
@@ -644,7 +669,7 @@
     padding: 10px 8px;
   }
 
-  .operation-type-selector label {
-    font-size: 0.8rem;
+  .operation-type-selector .operation-type-option {
+    font-size: 0.88rem;
   }
 }

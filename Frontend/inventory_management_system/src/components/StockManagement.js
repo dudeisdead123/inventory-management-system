@@ -560,32 +560,32 @@ const StockManagement = () => {
                         <h3>Stock Operations</h3>
                         <form onSubmit={handleStockOperation} className="stock-operation-form">
                             <div className="operation-type-selector">
-                                <label>
-                                    <input 
-                                        type="radio" 
-                                        value="add" 
+                                <label className="operation-type-option">
+                                    <input
+                                        type="radio"
+                                        value="add"
                                         checked={operationType === 'add'}
                                         onChange={(e) => setOperationType(e.target.value)}
                                     />
-                                    Add Stock
+                                    <span className="operation-type-text">Add Stock</span>
                                 </label>
-                                <label>
-                                    <input 
-                                        type="radio" 
-                                        value="remove" 
+                                <label className="operation-type-option">
+                                    <input
+                                        type="radio"
+                                        value="remove"
                                         checked={operationType === 'remove'}
                                         onChange={(e) => setOperationType(e.target.value)}
                                     />
-                                    Remove Stock
+                                    <span className="operation-type-text">Remove Stock</span>
                                 </label>
-                                <label>
-                                    <input 
-                                        type="radio" 
-                                        value="transfer" 
+                                <label className="operation-type-option">
+                                    <input
+                                        type="radio"
+                                        value="transfer"
                                         checked={operationType === 'transfer'}
                                         onChange={(e) => setOperationType(e.target.value)}
                                     />
-                                    Transfer Stock
+                                    <span className="operation-type-text">Transfer Stock</span>
                                 </label>
                             </div>
 

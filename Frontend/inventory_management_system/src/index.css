@@ -492,7 +492,15 @@ a:hover {
 
 .theme-toggle-btn:hover {
   background: var(--primary-light) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: var(--glass-border) !important;
+}
+
+.light-theme .theme-toggle-btn {
+  color: var(--text-main) !important;
+}
+
+.light-theme .theme-toggle-btn:hover {
+  border-color: var(--glass-border) !important;
 }
 
 /* AI stock optimizer css */

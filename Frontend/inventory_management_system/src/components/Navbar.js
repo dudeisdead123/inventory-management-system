@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, NavLink } from 'react-router-dom';
-import './Navbar.css';import { Icons } from './Icons';
+import './Navbar.css';
+import { Icons } from './Icons';
 
 const BrandLogo = () => (
   <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -111,9 +112,10 @@ export default function Navbar(props) {
             )}
           </ul>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button 
-              className="theme-toggle-btn" 
+          <div className="navbar-actions">
+            <button
+              type="button"
+              className="theme-toggle-btn"
               onClick={toggleTheme}
               aria-label="Toggle theme"
             >
@@ -125,23 +127,23 @@ export default function Navbar(props) {
             </button>
 
             {user && (
-            <div className="navbar-user">
-              <div className="user-info">
-                <span className="user-icon">
-                  {user.role === 'customer' ? (
-                    <Icons.Customers size={18} style={{ verticalAlign: 'middle' }} />
-                  ) : (
-                    <Icons.Admin size={18} style={{ verticalAlign: 'middle' }} />
-                  )}
-                </span>
-                <span className="user-name">{user.name}</span>
+              <div className="navbar-user">
+                <div className="user-info">
+                  <span className="user-icon">
+                    {user.role === 'customer' ? (
+                      <Icons.Customers size={18} />
+                    ) : (
+                      <Icons.Admin size={18} />
+                    )}
+                  </span>
+                  <span className="user-name">{user.name}</span>
+                </div>
+                <button type="button" className="logout-btn" onClick={handleLogout}>
+                  <Icons.Logout size={18} style={{ marginRight: '6px' }} />
+                  Log out
+                </button>
               </div>
-              <button className="logout-btn" onClick={handleLogout}>
-                <Icons.Logout size={18} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
-                Log out
-              </button>
-            </div>
-          )}
+            )}
           </div>
         </div>
       </div>

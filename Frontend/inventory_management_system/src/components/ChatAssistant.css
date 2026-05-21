@@ -482,46 +482,59 @@
 /* Feature cards */
 .ims-desk-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
   padding: 0 0.75rem 0.65rem;
   flex-shrink: 0;
+  align-items: stretch;
 }
 
-.ims-desk-card {
+.ims-desk button.ims-desk-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.2rem;
-  padding: 0.65rem 0.7rem;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  padding: 0.7rem 0.6rem 0.75rem !important;
+  min-height: 3.5rem;
+  height: auto;
+  line-height: 1.4 !important;
   text-align: left;
-  background: var(--desk-card);
-  border: 1px solid var(--desk-border);
+  overflow: visible;
+  background: var(--desk-card) !important;
+  border: 1px solid var(--desk-border) !important;
   border-radius: 12px;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.ims-desk-card:hover:not(:disabled) {
-  border-color: var(--desk-border-hover);
-  background: var(--desk-elevated);
+.ims-desk button.ims-desk-card:hover:not(:disabled) {
+  border-color: var(--desk-border-hover) !important;
+  background: var(--desk-elevated) !important;
 }
 
-.ims-desk-card:disabled {
+.ims-desk button.ims-desk-card:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .ims-desk-card-title {
-  font-size: 0.72rem;
+  display: block;
+  width: 100%;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--desk-text);
-  line-height: 1.2;
+  line-height: 1.35;
+  overflow: visible;
 }
 
 .ims-desk-card-desc {
-  font-size: 0.62rem;
+  display: block;
+  width: 100%;
+  font-size: 0.65rem;
   color: var(--desk-text-soft);
-  line-height: 1.3;
+  line-height: 1.45;
+  overflow: visible;
+  word-break: break-word;
 }
 
 /* Compose box */
@@ -697,10 +710,17 @@
     grid-template-columns: 1fr;
   }
 
-  .ims-desk-card {
+  .ims-desk button.ims-desk-card {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    min-height: 2.75rem;
+    padding: 0.65rem 0.75rem !important;
+  }
+
+  .ims-desk-card-title,
+  .ims-desk-card-desc {
+    width: auto;
   }
 
   .ims-desk-fab {

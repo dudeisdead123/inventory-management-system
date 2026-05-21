@@ -144,6 +144,10 @@
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     border: 1px solid var(--glass-border);
     min-height: 400px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .tab-content h3 {
@@ -240,29 +244,47 @@
 }
 
 /* Operations Tab */
+.operations-tab,
+.stock-operation-form {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
 .stock-operation-form {
     max-width: 600px;
 }
 
 .operation-type-selector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
     margin-bottom: 20px;
+    box-sizing: border-box;
 }
 
 .operation-type-selector label {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
     cursor: pointer;
-    padding: 8px 14px;
+    padding: 10px 8px;
     border-radius: var(--radius-sm);
     background: rgba(255, 255, 255, 0.01);
     border: 1px solid var(--glass-border);
     transition: var(--transition-base);
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
     color: var(--text-muted);
 }
 
@@ -323,6 +345,34 @@
     border-color: var(--border-focus) !important;
     background-color: var(--input-bg) !important;
     box-shadow: none !important;
+}
+
+.stock-management .form-group select {
+    min-height: 2.75rem;
+    cursor: pointer;
+    appearance: auto;
+    -webkit-appearance: menulist;
+}
+
+.stock-management .form-group select option {
+    color: var(--input-text) !important;
+    background-color: var(--input-bg) !important;
+}
+
+.light-theme .stock-management .form-group select option {
+    color: #18181b !important;
+    background-color: #ffffff !important;
+}
+
+.location-hint {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--warning-color);
+    background: var(--warning-light);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: var(--radius-sm);
 }
 
 .operation-btn {
@@ -544,4 +594,57 @@
   border-top: 1px dashed var(--glass-border);
   margin-top: 4px;
   padding-top: 6px;
+}
+
+/* Mobile — stock operations & layout */
+@media (max-width: 768px) {
+  .stock-management {
+    padding: 4.5rem 1rem 2rem !important;
+  }
+
+  .stock-header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .header-info h1 {
+    font-size: 1.5rem;
+  }
+
+  .tab-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .operation-type-selector {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .operation-type-selector label {
+    justify-content: flex-start;
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+  }
+
+  .light-theme .operation-type-selector label:hover,
+  .light-theme .operation-type-selector label:has(input[type="radio"]:checked) {
+    color: var(--text-main) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stock-tabs button {
+    font-size: 0.72rem;
+    padding: 10px 8px;
+  }
+
+  .operation-type-selector label {
+    font-size: 0.8rem;
+  }
 }

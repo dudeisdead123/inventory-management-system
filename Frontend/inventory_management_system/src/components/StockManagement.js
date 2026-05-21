@@ -1,9 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import './StockManagement.css';
 import { Icons } from './Icons';
 import { API_BASE_URL, apiUrl } from '../config/api';
+
+const normalizeLocationRow = (row) => {
+    if (!row) return null;
+    const locationId = row.locationId || row.locationid || row.location;
+    const locationName =
+        row.locationName ||
+        row.locationname ||
+        (locationId
+            ? String(locationId).charAt(0).toUpperCase() + String(locationId).slice(1)
+            : 'Location');
+    return {
+        id: row.id || row._id || locationId,
+        locationId,
+        locationName,
+    };
+};
 
 const StockManagement = () => {
     const { productId } = useParams();
@@ -52,6 +68,18 @@ const StockManagement = () => {
         }
     });
 
+    const locationOptions = useMemo(() => {
+        if (locations.length > 0) {
+            return locations;
+        }
+        if (!product?.locationStock?.length) {
+            return [];
+        }
+        return product.locationStock
+            .map((ls) => normalizeLocationRow({ location: ls.location, locationId: ls.location }))
+            .filter((loc) => loc?.locationId);
+    }, [locations, product]);
+
     useEffect(() => {
         if (productId) {
             fetchProduct();
@@ -76,6 +104,12 @@ const StockManagement = () => {
         }
     }, [productId]);
 
+    useEffect(() => {
+        if (locationOptions.length > 0) {
+            applyLocationDefaults(locationOptions);
+        }
+    }, [locationOptions]);
+
     const fetchProduct = async () => {
         try {
             const token = localStorage.getItem('auth-token');
@@ -97,43 +131,51 @@ const StockManagement = () => {
         }
     };
 
+    const applyLocationDefaults = (normalized) => {
+        if (!normalized.length) return;
+        setSelectedLocation((prev) => prev || normalized[0].locationId);
+        setFromLocation((prev) => prev || normalized[0].locationId);
+        setToLocation((prev) => prev || (normalized[1]?.locationId || normalized[0].locationId));
+    };
+
     const fetchLocations = async () => {
         try {
             const token = localStorage.getItem('auth-token');
-            const response = await fetch(apiUrl('/locations'), {
-                headers: {
-                    'auth-token': token,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const headers = {
+                'auth-token': token,
+                'Content-Type': 'application/json',
+            };
+
+            let response = await fetch(apiUrl('/locations'), { headers });
+
+            if (!response.ok) {
+                await fetch(apiUrl('/initialize-locations'), { method: 'POST', headers });
+                response = await fetch(apiUrl('/locations'), { headers });
+            }
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('Fetched locations:', data);
-                setLocations(data);
-                if (data.length > 0 && !selectedLocation) {
-                    setSelectedLocation(data[0].locationId);
-                    setFromLocation(data[0].locationId);
-                }
-            } else {
-                console.log('No locations found - may need to initialize');
-                // Try to initialize locations if none found
-                const initResponse = await fetch(apiUrl('/initialize-locations'), {
-                    method: 'POST',
-                    headers: {
-                        'auth-token': token,
-                        'Content-Type': 'application/json'
+                let normalized = (Array.isArray(data) ? data : [])
+                    .map(normalizeLocationRow)
+                    .filter((loc) => loc?.locationId);
+
+                if (normalized.length === 0) {
+                    await fetch(apiUrl('/initialize-locations'), { method: 'POST', headers });
+                    const retry = await fetch(apiUrl('/locations'), { headers });
+                    if (retry.ok) {
+                        const retryData = await retry.json();
+                        normalized = (Array.isArray(retryData) ? retryData : [])
+                            .map(normalizeLocationRow)
+                            .filter((loc) => loc?.locationId);
                     }
-                });
-                
-                if (initResponse.ok) {
-                    console.log('Locations initialized, fetching again...');
-                    // Recursively call to fetch the newly created locations
-                    setTimeout(() => fetchLocations(), 1000);
                 }
+
+                setLocations(normalized);
+                applyLocationDefaults(normalized);
             }
         } catch (error) {
             console.error('Error fetching locations:', error);
+            showToast('Could not load locations. Check backend connection.', 'error');
         }
     };
 
@@ -558,8 +600,8 @@ const StockManagement = () => {
                                                 required
                                             >
                                                 <option value="">Select location</option>
-                                                {locations.map(loc => (
-                                                    <option key={loc._id} value={loc.locationId}>
+                                                {locationOptions.map((loc) => (
+                                                    <option key={loc.id} value={loc.locationId}>
                                                         {loc.locationName} ({loc.locationId})
                                                     </option>
                                                 ))}
@@ -573,8 +615,8 @@ const StockManagement = () => {
                                                 required
                                             >
                                                 <option value="">Select location</option>
-                                                {locations.map(loc => (
-                                                    <option key={loc._id} value={loc.locationId}>
+                                                {locationOptions.map((loc) => (
+                                                    <option key={`to-${loc.id}`} value={loc.locationId}>
                                                         {loc.locationName} ({loc.locationId})
                                                     </option>
                                                 ))}
@@ -590,13 +632,19 @@ const StockManagement = () => {
                                             required
                                         >
                                             <option value="">Select location</option>
-                                            {locations.map(loc => (
-                                                <option key={loc._id} value={loc.locationId}>
+                                            {locationOptions.map((loc) => (
+                                                <option key={loc.id} value={loc.locationId}>
                                                     {loc.locationName} ({loc.locationId})
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
+                                )}
+
+                                {locationOptions.length === 0 && (
+                                    <p className="location-hint">
+                                        No locations loaded. Refresh the page or run Setup Locations from Products.
+                                    </p>
                                 )}
 
                                 <div className="form-group">

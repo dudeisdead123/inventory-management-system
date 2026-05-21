@@ -305,28 +305,39 @@ router.post('/initialize-stock', fetchuser, async (req, res) => {
 
 // ====== LOCATION MANAGEMENT ROUTES ======
 
+const DEFAULT_LOCATIONS = [
+    { locationId: 'mumbai', locationName: 'Mumbai', locationType: 'store', street: 'M G Road', city: 'Mumbai', state: 'MH', zipCode: '400001', country: 'India', phone: '+91-9876543210', email: 'mumbai@company.com', manager: 'Rahul Kumar' },
+    { locationId: 'delhi', locationName: 'Delhi', locationType: 'store', street: 'Connaught Place', city: 'Delhi', state: 'DL', zipCode: '110001', country: 'India', phone: '+91-9876543211', email: 'delhi@company.com', manager: 'Priya Singh' },
+    { locationId: 'bengaluru', locationName: 'Bengaluru', locationType: 'store', street: 'MG Road', city: 'Bengaluru', state: 'KA', zipCode: '560001', country: 'India', phone: '+91-9876543212', email: 'bengaluru@company.com', manager: 'Amit Patel' },
+    { locationId: 'chennai', locationName: 'Chennai', locationType: 'store', street: 'Anna Salai', city: 'Chennai', state: 'TN', zipCode: '600002', country: 'India', phone: '+91-9876543213', email: 'chennai@company.com', manager: 'Karthik N' },
+    { locationId: 'kolkata', locationName: 'Kolkata', locationType: 'store', street: 'Park Street', city: 'Kolkata', state: 'WB', zipCode: '700016', country: 'India', phone: '+91-9876543214', email: 'kolkata@company.com', manager: 'Sanjay Das' },
+    { locationId: 'hyderabad', locationName: 'Hyderabad', locationType: 'store', street: 'Banjara Hills', city: 'Hyderabad', state: 'TG', zipCode: '500034', country: 'India', phone: '+91-9876543215', email: 'hyderabad@company.com', manager: 'Vikram Reddy' },
+];
+
+async function ensureDefaultLocations(createdBy) {
+    const existingLocations = await query('SELECT id FROM locations', []);
+    if (existingLocations.rows.length > 0) {
+        return existingLocations.rows.length;
+    }
+    for (const loc of DEFAULT_LOCATIONS) {
+        await query(
+            `INSERT INTO locations ("locationId", "locationName", "locationType", street, city, state, "zipCode", country, phone, email, manager, "isActive", "currentUtilization", "createdBy")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true, 0, $12)`,
+            [loc.locationId, loc.locationName, loc.locationType, loc.street, loc.city, loc.state, loc.zipCode, loc.country, loc.phone, loc.email, loc.manager, createdBy || null]
+        );
+    }
+    return DEFAULT_LOCATIONS.length;
+}
+
 router.post('/initialize-locations', fetchuser, async (req, res) => {
     try {
-        const existingLocations = await query('SELECT id FROM locations', []);
-        if (existingLocations.rows.length === 0) {
-            const defaultLocations = [
-                { locationId: 'mumbai', locationName: 'Mumbai', locationType: 'store', street: 'M G Road', city: 'Mumbai', state: 'MH', zipCode: '400001', country: 'India', phone: '+91-9876543210', email: 'mumbai@company.com', manager: 'Rahul Kumar' },
-                { locationId: 'delhi', locationName: 'Delhi', locationType: 'store', street: 'Connaught Place', city: 'Delhi', state: 'DL', zipCode: '110001', country: 'India', phone: '+91-9876543211', email: 'delhi@company.com', manager: 'Priya Singh' },
-                { locationId: 'bengaluru', locationName: 'Bengaluru', locationType: 'store', street: 'MG Road', city: 'Bengaluru', state: 'KA', zipCode: '560001', country: 'India', phone: '+91-9876543212', email: 'bengaluru@company.com', manager: 'Amit Patel' },
-                { locationId: 'chennai', locationName: 'Chennai', locationType: 'store', street: 'Anna Salai', city: 'Chennai', state: 'TN', zipCode: '600002', country: 'India', phone: '+91-9876543213', email: 'chennai@company.com', manager: 'Karthik N' },
-                { locationId: 'kolkata', locationName: 'Kolkata', locationType: 'store', street: 'Park Street', city: 'Kolkata', state: 'WB', zipCode: '700016', country: 'India', phone: '+91-9876543214', email: 'kolkata@company.com', manager: 'Sanjay Das' },
-                { locationId: 'hyderabad', locationName: 'Hyderabad', locationType: 'store', street: 'Banjara Hills', city: 'Hyderabad', state: 'TG', zipCode: '500034', country: 'India', phone: '+91-9876543215', email: 'hyderabad@company.com', manager: 'Vikram Reddy' },
-            ];
-            for (const loc of defaultLocations) {
-                await query(
-                    `INSERT INTO locations ("locationId", "locationName", "locationType", street, city, state, "zipCode", country, phone, email, manager, "isActive", "currentUtilization", "createdBy")
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true, 0, $12)`,
-                    [loc.locationId, loc.locationName, loc.locationType, loc.street, loc.city, loc.state, loc.zipCode, loc.country, loc.phone, loc.email, loc.manager, req.user.id]
-                );
-            }
-            res.status(200).json({ message: 'Default locations initialized successfully', count: defaultLocations.length });
+        const before = await query('SELECT id FROM locations', []);
+        const beforeCount = before.rows.length;
+        const count = await ensureDefaultLocations(req.user.id);
+        if (beforeCount === 0) {
+            res.status(200).json({ message: 'Default locations initialized successfully', count });
         } else {
-            res.status(200).json({ message: 'Locations already exist', count: existingLocations.rows.length });
+            res.status(200).json({ message: 'Locations already exist', count: beforeCount });
         }
     } catch (error) {
         console.error(error);
@@ -337,7 +348,11 @@ router.post('/initialize-locations', fetchuser, async (req, res) => {
 
 router.get('/locations', fetchuser, async (req, res) => {
     try {
-        const result = await query('SELECT * FROM locations WHERE "isActive" = true ORDER BY "locationName"', []);
+        let result = await query('SELECT * FROM locations WHERE "isActive" = true ORDER BY "locationName"', []);
+        if (result.rows.length === 0) {
+            await ensureDefaultLocations(req.user.id);
+            result = await query('SELECT * FROM locations WHERE "isActive" = true ORDER BY "locationName"', []);
+        }
         res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);

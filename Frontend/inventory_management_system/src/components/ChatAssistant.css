@@ -20,8 +20,8 @@
   --desk-assistant-bg: #1a1a1a;
   --desk-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
   --desk-backdrop: rgba(0, 0, 0, 0.55);
-  --desk-focus-border: #4a96c9;
-  --desk-focus-ring: rgba(56, 142, 196, 0.32);
+  --desk-focus-border: #b87ec8;
+  --desk-focus-ring: rgba(196, 120, 210, 0.35);
   --desk-error-bg: rgba(239, 68, 68, 0.1);
   --desk-error-text: #fca5a5;
 
@@ -57,8 +57,8 @@
   --desk-assistant-bg: #ffffff;
   --desk-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   --desk-backdrop: rgba(15, 15, 15, 0.35);
-  --desk-focus-border: #3b7eb5;
-  --desk-focus-ring: rgba(48, 105, 168, 0.28);
+  --desk-focus-border: #a86ab8;
+  --desk-focus-ring: rgba(168, 90, 185, 0.3);
   --desk-error-bg: rgba(239, 68, 68, 0.08);
   --desk-error-text: #b91c1c;
 }

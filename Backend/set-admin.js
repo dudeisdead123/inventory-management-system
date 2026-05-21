@@ -1,27 +1,31 @@
+/**
+ * One-time utility: create or update an admin user.
+ * Edit email/password below, then: node set-admin.js
+ * Requires DATABASE_URL (or PG* vars) in Backend/.env
+ */
+require('dotenv').config();
 const { pool } = require('./db');
 const bcrypt = require('bcryptjs');
 
-// Change these constants to the credentials you want
-const TARGET_EMAIL    = 'ansumanaheer8@gmail.com';   // email you log in with
-const NEW_PASSWORD    = 'Kash@5612'; // desired password
+const TARGET_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com';
+const NEW_PASSWORD = process.env.ADMIN_PASSWORD || 'ChangeMe123!';
 
 (async () => {
   try {
-    // Hash the new password
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(NEW_PASSWORD, salt);
 
-    // Upsert the admin row – will INSERT if missing, UPDATE if present
-    const upsertQuery = `
-      INSERT INTO users (name, email, password, role, location)
-      VALUES ('Admin', $1, $2, 'admin', 'All')
-      ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password, name = EXCLUDED.name;
-    `;
-    const res = await pool.query(upsertQuery, [TARGET_EMAIL, hash]);
-    console.log('✅ Admin credentials set →', TARGET_EMAIL, NEW_PASSWORD);
+    await pool.query(
+      `INSERT INTO users (name, email, password, role, location)
+       VALUES ('Admin', $1, $2, 'admin', 'All')
+       ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password, name = EXCLUDED.name`,
+      [TARGET_EMAIL, hash]
+    );
+    console.log('Admin credentials set for:', TARGET_EMAIL);
   } catch (err) {
-    console.error('❌ Error updating admin:', err);
+    console.error('Error updating admin:', err.message);
+    process.exit(1);
   } finally {
-    process.exit();
+    await pool.end();
   }
 })();

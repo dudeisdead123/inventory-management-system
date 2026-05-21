@@ -1,0 +1,10 @@
+# Netlify build settings for the React frontend
+[build]
+  base = "Frontend/inventory_management_system"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  # Netlify sets CI=true by default; CRA then fails on ESLint warnings
+  CI = "false"
+  NODE_VERSION = "18"

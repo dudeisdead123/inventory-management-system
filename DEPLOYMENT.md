@@ -68,8 +68,10 @@ RAZORPAY_KEY_SECRET=...
 
 ## 3. Deploy the frontend (Netlify)
 
+**If the build fails with ESLint / "Treating warnings as errors":** the repo includes `netlify.toml` with `CI=false`. Push latest code, or in Netlify → **Environment variables** add `CI` = `false` and redeploy.
+
 1. Netlify: **Add new site → Import from Git**.
-2. Settings:
+2. Settings (or use root `netlify.toml` — leave UI fields empty if the file is in your repo):
 
 | Setting | Value |
 |---------|--------|

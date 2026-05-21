@@ -20,7 +20,8 @@
   --desk-assistant-bg: #1a1a1a;
   --desk-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
   --desk-backdrop: rgba(0, 0, 0, 0.55);
-  --desk-focus: rgba(142, 180, 232, 0.15);
+  --desk-focus-border: #4a96c9;
+  --desk-focus-ring: rgba(56, 142, 196, 0.32);
   --desk-error-bg: rgba(239, 68, 68, 0.1);
   --desk-error-text: #fca5a5;
 
@@ -56,7 +57,8 @@
   --desk-assistant-bg: #ffffff;
   --desk-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
   --desk-backdrop: rgba(15, 15, 15, 0.35);
-  --desk-focus: rgba(74, 111, 165, 0.12);
+  --desk-focus-border: #3b7eb5;
+  --desk-focus-ring: rgba(48, 105, 168, 0.28);
   --desk-error-bg: rgba(239, 68, 68, 0.08);
   --desk-error-text: #b91c1c;
 }
@@ -554,14 +556,18 @@
 }
 
 .ims-desk-compose-box:focus-within {
-  border-color: var(--desk-border-hover);
-  box-shadow: 0 0 0 3px var(--desk-focus);
+  border-color: var(--desk-focus-border) !important;
+  box-shadow: 0 0 0 3px var(--desk-focus-ring);
 }
 
 .ims-desk-input {
   font-size: 0.875rem;
   font-weight: 400;
   padding: 0;
+}
+
+.ims-desk-input:focus {
+  outline: none;
 }
 
 .ims-desk-compose-toolbar {
